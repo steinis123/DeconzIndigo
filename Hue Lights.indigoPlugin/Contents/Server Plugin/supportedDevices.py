@@ -54,12 +54,12 @@
 # LTC002	=	Hue Ambiance Ceiling
 # LTC003	=	Hue Ambiance Ceiling
 # LTC004	=	Hue Ambiance Ceiling
-# LTC011    =   Hue Ambiance Ceiling
 # LTF001	=	Hue Ambiance Ceiling
 # LTF002	=	Hue Ambiance Ceiling
 # LTD001	=	Hue Ambiance Ceiling
 # LTD002	=	Hue Ambiance Ceiling
 # LTW004	=	Hue A19 White Ambiance bulb
+# LTC011    =   Hue Ambiance Ceiling
 # LTW010	=	Hue A19 White Ambiance bulb
 # LTW011	=	Hue BR30 White Ambiance bulb
 # LTW012	=	Hue Ambiance Candle E14 bulb
@@ -114,10 +114,9 @@
 # SML001	=	Hue Motion Sensor (multi-sensor with presense, illumination and temperature)
 #
 # 3rd Party (Non-Philips) ZigBee Lights
-# ZLL Light							=	Generic ZigBee Light (e.g. GE Link LEDs)
-# GLEDOPTO							=	GLEDOPTO Generic ZigBee WW/CW light strip (color temp. only)
-# GL-C-007							=	GLEDOPTO Generic ZigBee color light strip (color and color temp)
-# GL-C-009                          =   GLEDOPTO Generic ZigBee dimmable LED controller (no color control)
+# ZHA Light							=	Generic ZigBee Light (e.g. GE Link LEDs)
+# GLEDOPTO							=	Generic ZigBee WW/CW light strip (color temp. only)
+# GL-C-007							=	Generic ZigBee color light strip (color and color temp).
 # FLS-PP3							=	Dresden Elektronik FLS-PP lp LED light strip, color LED segment
 # FLS-PP3 White						=	Dresden Elektronik FLS-PP lp LED light strip, white light segment
 # FLS-CT							=	Dredesn Elektronik FLS-CT lp LED color temperature light
@@ -137,7 +136,6 @@
 # FLOALT panel WS 30x90				=	IKEA color temperature LED panel
 # RS 128 T							=	Innr RS-128T GU10 color temperature lights
 # SP 120							=	Innr On/Off Plugin-in module
-# RB 185 C                          =   Innr RB-185C color and color temperature light
 # FB56-ZCW08KU1.1                   =   Feibit Inc. LED strip controller
 
 
@@ -148,11 +146,11 @@ kHueBulbDeviceIDs = ['LCT001', 'LCT002', 'LCT003', 'LCT007', 'LCT010', 'LCT011',
 # Compatible LivingColors devices (Color only)
 kLivingColorsDeviceIDs = ['LLC001', 'LLC005', 'LLC006', 'LLC007', 'LLC010', 'LLC011', 'LLC012', 'LLC013', 'LLC014', 'LLC020', 'TRADFRI bulb E26 CWS opal 600lm']
 # Compatible Ambiance devices (Color Temperature only)
-kAmbianceDeviceIDs = ['LLM010', 'LLM011', 'LLM012', 'LTW001', 'LTC001', 'LTC003', 'LTC002', 'LTC003', 'LTW004', 'LTC011', 'LTW010', 'LTW011', 'LTW012', 'LTW013', 'LTW014', 'LTW015', 'LTF001', 'LTF002', 'LTD001', 'LTD002', 'LTP001', 'LTP002', 'LTP003', 'LTP004', 'LTP005', 'LTD003', 'LFF001', 'LTT001', 'LDT001', 'HML001', 'HML002', 'HML003', 'HML004', 'HML005', 'HML006', 'Classic A60 TW', 'PAR16 50 TW', 'RS 128 T', 'FLOALT panel WS 30x90', 'FLS-CT', 'GLEDOPTO', 'TRADFRI bulb E27 WS opal 980lm']
+kAmbianceDeviceIDs = ['LLM010', 'LLM011', 'LLM012', 'LTW001', 'LTC001', 'LTC003', 'LTC002', 'LTC003', 'LTW004', 'LTW010', 'LTW011', 'LTW012', 'LTW013', 'LTW014', 'LTW015', 'LTF001', 'LTF002', 'LTD001', 'LTD002', 'LTP001', 'LTP002', 'LTP003', 'LTP004', 'LTP005', 'LTD003', 'LFF001', 'LTT001', 'LDT001', 'HML001', 'HML002', 'HML003', 'HML004', 'HML005', 'HML006', 'Classic A60 TW', 'PAR16 50 TW', 'RS 128 T', 'FLOALT panel WS 30x90', 'FLS-CT', 'GLEDOPTO', 'TRADFRI bulb E27 WS opal 980lm']
 # Compatible LightStrips devices. (Color only on LST001. Color and Color Temperature on others)
 kLightStripsDeviceIDs = ['LST001', 'LST002', 'LST003', 'LST004', 'Flex RGBW', 'HOMA1001', 'GL-C-007', 'FB56-ZCW08KU1.1']
 # Compatible LivingWhites devices. (Dimming only.  No color change of any kind)
-kLivingWhitesDeviceIDs = ['LWB001', 'LWB003', 'LWB004', 'LWB006', 'LWB007', 'LWB010', 'LWB014', 'LWL001', 'LDF001', 'LDF002', 'LDD001', 'LDD002', 'MWM001', 'ZLL Light', 'FLS-PP3 White', 'TRADFRI bulb E26 opal 1000lm', 'TRADFRI bulb E27 opal 1000lm', 'TRADFRI transformer 30W', 'SP 120', 'Plug 01', 'GL-C-009']
+kLivingWhitesDeviceIDs = ['LWB001', 'LWB003', 'LWB004', 'LWB006', 'LWB007', 'LWB010', 'LWB014', 'LWL001', 'LDF001', 'LDF002', 'LDD001', 'LDD002', 'MWM001', 'ZHA Light', 'FLS-PP3 White', 'TRADFRI bulb E26 opal 1000lm', 'TRADFRI bulb E27 opal 1000lm', 'TRADFRI transformer 30W', 'SP 120', 'Plug 01', 'GL-C-009']
 # All compatible light devices
 kCompatibleDeviceIDs = kHueBulbDeviceIDs + kAmbianceDeviceIDs + kLivingColorsDeviceIDs + kLightStripsDeviceIDs + kLivingWhitesDeviceIDs
 
@@ -160,7 +158,7 @@ kCompatibleDeviceIDs = kHueBulbDeviceIDs + kAmbianceDeviceIDs + kLivingColorsDev
 ### SENSORS ###
 ###############
 # Supported Sensor Types
-kSupportedSensorTypes = ['ZLLPresence', 'ZLLTemperature', 'ZLLLightLevel']
+kSupportedSensorTypes = ['ZHAPresence', 'ZHATemperature', 'ZHALightLevel']
 #
 # Specific Sensor Models...
 # Compatible motion sensors
@@ -169,7 +167,10 @@ kMotionSensorDeviceIDs = ['SML001']
 kLightSensorDeviceIDs = ['SML001']
 # Compatible temperature sensors
 kTemperatureSensorDeviceIDs = ['SML001']
+# Decon Compatible on/off sensors
+kDeconOnOffSensorDeviceIDs = ['lumi.sensor_magnet.aq2']
 
+kDeconCubeSensorDeviceIDs = ['lumi.sensor_cube.aqgl01']
 
 ### Other Constants ###
 #######################
@@ -178,8 +179,8 @@ kLightDeviceTypeIDs = ['hueBulb', 'hueAmbiance', 'hueLightStrips', 'hueLivingCol
 # All Group Device Type IDs.
 kGroupDeviceTypeIDs = ['hueGroup']
 # All Motion Sensor Type IDs.
-kMotionSensorTypeIDs = ['hueMotionSensor']
+kMotionSensorTypeIDs = ['hueMotionSensor', 'deconzOnOffSensor']
 # All Temperature Sensor Type IDs.
-kTemperatureSensorTypeIDs = ['hueMotionTemperatureSensor']
+kTemperatureSensorTypeIDs = ['hueMotionTemperatureSensor', 'deconzCubeSensor']
 # All Light Sensor Type IDs.
 kLightSensorTypeIDs = ['hueMotionLightSensor']

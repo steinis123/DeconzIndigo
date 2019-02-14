@@ -51,7 +51,7 @@ NOTE: Ramp Rates greater than 60 seconds when turning off a device will result i
 					  -> WhiteTemperatureMin				Integer (lower limit of usable white point temperature. e.g. 2000)
 					  -> WhiteTemperatureMax				Integer (upper limit of usable white point temperature. e.g. 6500)
 				   -> SupportsRGBandWhiteSimultaneously:	True or False (requires SupportsRGB and SupportsWhite to be True)
-			
+
 			Plugins can update these properties either in device ConfigUI
 			(like below), or can update them from python by using the
 			dev.replacePluginPropsOnServer() method, most likely inside your
@@ -653,8 +653,8 @@ Optionally set a default "on" level. When turned on, the Hue Device Attribute Co
 			</Field>
 		</ConfigUI>
 	</Device>
-	
-	
+
+
 	<!-- SENSOR DEVICES -->
 	<!-- Hue Motion Sensor (multi-sensor) -->
 	<!--   MOTION   -->
@@ -717,14 +717,14 @@ Optionally set a default "on" level. When turned on, the Hue Device Attribute Co
 			</State>
 		</States>
 	</Device>
-	<!--   TEMPERATURE   -->
+	<!--   TEMPERATURE   hueMotionTemperatureSensor -->
 	<Device type="sensor" id="hueMotionTemperatureSensor">
 		<Name>Hue Motion Sensor (Temperature)</Name>
 		<ConfigUI>
 			<Field id="sensorId" type="menu"
 				tooltip="Select a Hue Motion Sensor.">
 				<Label>Hue Sensor:</Label>
-				<List class="self" method="sensorListGenerator" filter="hueMotionTemperatureSensor" />
+				<List class="self" method="sensorListGenerator" filter="" />
 			</Field>
 			<Field id="temperatureScale" type="menu" defaultValue="c"
 				tooltip="Select a temperature scale to display in Indigo.">
@@ -871,6 +871,137 @@ Optionally set a calibration offset if the sensor readings are inaccurate.
 				<ValueType>Number</ValueType>
 				<TriggerLabel>Dark Threshold Offset (lux)</TriggerLabel>
 				<ControlPageLabel>Dark Threshold Offset (lxu)</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+
+
+
+	<!-- SENSOR DEVICES for Deconz -->
+	<!-- Deconz on/off Sensor (multi-sensor) -->
+	<Device type="sensor" id="deconzOnOffSensor">
+		<Name>Deconz on/off Sensor</Name>
+		<ConfigUI>
+			<Field id="sensorId" type="menu"
+				tooltip="Select a deconz on/off Sensor.">
+				<Label>deconz Sensor:</Label>
+				<List class="self" method="sensorListGenerator" filter="deconzOnOffSensor" />
+			</Field>
+			<Field id="address" type="textfield" hidden="true" />
+			<Field id="nameOnHub" type="textfield" hidden="true" />
+			<Field id="enabledOnHub" type="checkbox" hidden="true" defaultValue="true" />
+			<Field id="modelId" type="textfield" hidden="true" />
+			<Field id="manufacturerName" type="textfield" hidden="true" />
+			<Field id="swVersion" type="textfield" hidden="true" />
+			<Field id="type" type="textfield" hidden="true" />
+			<Field id="uniqueId" type="textfield" hidden="true" />
+			<Field id="productId" type="textfield" hidden="true" />
+			<Field id="SupportsBatteryLevel" type="checkbox" hidden="true" defaultValue="true" />
+			<Field id="SupportsSensorValue" type="checkbox" hidden="true" defaultValue="false" />
+			<Field id="SupportsOnState" type="checkbox" hidden="true" defaultValue="true" />
+		</ConfigUI>
+		<States>
+			<State id="alertMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Alert Mode</TriggerLabel>
+				<ControlPageLabel>Alert Mode</ControlPageLabel>
+			</State>
+			<State id="sensitivity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Sensitivity</TriggerLabel>
+				<ControlPageLabel>Sensitivity</ControlPageLabel>
+			</State>
+			<State id="sensitivityMax">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Maximum Sensitivity</TriggerLabel>
+				<ControlPageLabel>Maximum Sensitivity</ControlPageLabel>
+			</State>
+			<State id="online">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Online</TriggerLabel>
+				<ControlPageLabel>Online</ControlPageLabel>
+			</State>
+			<State id="testMode">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Test Mode</TriggerLabel>
+				<ControlPageLabel>Test Mode</ControlPageLabel>
+			</State>
+			<State id="ledEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>LED Enabled</TriggerLabel>
+				<ControlPageLabel>LED Enabled</ControlPageLabel>
+			</State>
+			<State id="lastUpdated">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Updated on Hub</TriggerLabel>
+				<ControlPageLabel>Last Updated on Hub</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
+
+	<!-- Deconz cube Sensor (Xiaomi Cube) -->
+	<Device type="sensor" id="deconzCubeSensor">
+		<Name>Deconz Xiaomi Cube Sensor</Name>
+		<ConfigUI>
+			<Field id="sensorId" type="menu"
+				tooltip="Select a deconz Xiaomi Cube Sensor.">
+				<Label>deconz Sensor:</Label>
+				<List class="self" method="sensorListGenerator" filter="" />
+			</Field>
+			<Field id="address" type="textfield" hidden="true" />
+			<Field id="nameOnHub" type="textfield" hidden="true" />
+			<Field id="enabledOnHub" type="checkbox" hidden="true" defaultValue="true" />
+			<Field id="modelId" type="textfield" hidden="true" />
+			<Field id="manufacturerName" type="textfield" hidden="true" />
+			<Field id="swVersion" type="textfield" hidden="true" />
+			<Field id="type" type="textfield" hidden="true" />
+			<Field id="uniqueId" type="textfield" hidden="true" />
+			<Field id="productId" type="textfield" hidden="true" />
+			<Field id="SupportsBatteryLevel" type="checkbox" hidden="true" defaultValue="true" />
+			<Field id="SupportsSensorValue" type="checkbox" hidden="true" defaultValue="true" />
+			<Field id="SupportsOnState" type="checkbox" hidden="true" defaultValue="false" />
+		</ConfigUI>
+		<States>
+			<State id="sensorName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>sensorValue</TriggerLabel>
+				<ControlPageLabel>sensorValue</ControlPageLabel>
+			</State>
+			<State id="alertMode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Alert Mode</TriggerLabel>
+				<ControlPageLabel>Alert Mode</ControlPageLabel>
+			</State>
+			<State id="sensitivity">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Sensitivity</TriggerLabel>
+				<ControlPageLabel>Sensitivity</ControlPageLabel>
+			</State>
+			<State id="sensitivityMax">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Maximum Sensitivity</TriggerLabel>
+				<ControlPageLabel>Maximum Sensitivity</ControlPageLabel>
+			</State>
+			<State id="online">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Online</TriggerLabel>
+				<ControlPageLabel>Online</ControlPageLabel>
+			</State>
+			<State id="testMode">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Test Mode</TriggerLabel>
+				<ControlPageLabel>Test Mode</ControlPageLabel>
+			</State>
+			<State id="ledEnabled">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>LED Enabled</TriggerLabel>
+				<ControlPageLabel>LED Enabled</ControlPageLabel>
+			</State>
+			<State id="lastUpdated">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Updated on Hub</TriggerLabel>
+				<ControlPageLabel>Last Updated on Hub</ControlPageLabel>
 			</State>
 		</States>
 	</Device>

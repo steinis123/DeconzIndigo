@@ -49,7 +49,7 @@ class Plugin(indigo.PluginBase):
 	########################################
 	# Loading and Starting Methods
 	########################################
-	
+
 	# Load Plugin
 	########################################
 	def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
@@ -81,12 +81,12 @@ class Plugin(indigo.PluginBase):
 		self.maxPresetCount = int(pluginPrefs.get('maxPresetCount', "30"))	# Integer. The maximum number of Presets to use and store.
 		# Load the update checker module.
 		self.updater = indigoPluginUpdateChecker.updateChecker(self, 'http://www.nathansheldon.com/files/PluginVersions/Hue-Lights.html')
-	
+
 	# Unload Plugin
 	########################################
 	def __del__(self):
 		indigo.PluginBase.__del__(self)
-		
+
 	# Startup
 	########################################
 	def startup(self):
@@ -94,7 +94,7 @@ class Plugin(indigo.PluginBase):
 		# Perform an initial version check.
 		self.debugLog(u"Running plugin version check (if enabled).")
 		self.updater.checkVersionPoll()
-		
+
 		# Prior to version 1.2.0, the "presets" property did not exist in the plugin preferences.
 		#   If that property does not exist, add it.
 		# As of version 1.2.6, there were 30 presets instead of 10.
@@ -160,7 +160,7 @@ class Plugin(indigo.PluginBase):
 							# Key probably doesn't exist. Proceed as if no rate was saved.
 							presetRate = -1
 							pass
-						
+
 						# Display the Preset data in the Indigo log.
 						logRampRate = unicode(presetRate) + u" sec."
 						if presetRate == -1:
@@ -169,7 +169,7 @@ class Plugin(indigo.PluginBase):
 					# Now delete the Preset.
 					del presets[aNumber]
 					indigo.server.log(u"... Preset " + unicode(aNumber + 1) + u" deleted.")
-					
+
 		self.debugLog(u"pluginPrefs are:\n" + unicode(self.pluginPrefs))
 
 		# Do we have a unique Hue username (a.k.a. key or host ID)?
@@ -178,21 +178,21 @@ class Plugin(indigo.PluginBase):
 			self.debugLog(u"Hue Lights doesn't appear to be paired with the Hue hub.")
 		else:
 			self.debugLog(u"The username Hue Lights uses to connect to the Hue hub is %s" % hueUsername)
-		
+
 		# Get the entire Hue hub configuration and report the results.
 		self.updateAllHueLists()
-		
-			
+
+
 	# Start Devices
 	########################################
 	def deviceStartComm(self, device):
 		self.debugLog(u"Starting device: " + device.name)
 		# Clear any device error states first.
 		device.setErrorStateOnServer("")
-		
+
 		# Rebuild the device if needed (fixes missing states and properties).
 		self.rebuildDevice(device)
-		
+
 		# Update the device lists and the device states.
 		# Hue Device Attribute Controller
 		if device.deviceTypeId == "hueAttributeController":
@@ -221,7 +221,7 @@ class Plugin(indigo.PluginBase):
 					#   this error instead of the actual bulb definition.
 					self.debugLog(u"Hue device definition cannot be displayed because: " + unicode(e))
 				self.deviceList.append(device.id)
-				
+
 
 	# Stop Devices
 	########################################
@@ -238,17 +238,17 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def shutdown(self):
 		self.debugLog(u"Plugin shutdown called.")
-	
-	
+
+
 	########################################
 	# Standard Plugin Methods
 	########################################
-	
+
 	# Run a Concurrent Thread for Status Updates
 	########################################
 	def runConcurrentThread(self):
 		self.debugLog(u"Starting runConcurrentThread.")
-		
+
 		# Set initial values for activity flags
 		goBrightenDim         = True
 		loopsForBrightenDim   = 4		# At least 0.4 sec delay
@@ -265,16 +265,16 @@ class Plugin(indigo.PluginBase):
 		loopCount             = 0       # Loop counter
 		# Set the maximum loop counter value based on the highest of the above activity threshold variables.
 		loopCountMax = max([loopsForBrightenDim, loopsForSensorRefresh, loopsForLightsRefresh, loopsForGroupsRefresh, loopsForUpdateCheck, loopsForErrorReset])
-		
+
 		try:
 			while True:
 				# We're using some primitive time sharing techniques here based on
 				# the number of loops (assuming a 0.1 second delay between loops).
 				# Each activity is activated after a specific number of loops.
-				
+
 				## Give Indigo Some Time ##
 				self.sleep(0.1)
-				
+
 				## Brightening and Dimming Devices ##
 				# Go through the devices waiting to be brightened
 				if goBrightenDim:
@@ -305,7 +305,7 @@ class Plugin(indigo.PluginBase):
 							self.doBrightness(brightenDevice, brightness, 0.5, False)
 						# End if brightenDeviceId is in self.deviceList.
 					# End loop through self.brighteningList.
-					
+
 					# Go through the devices waiting to be dimmed.
 					for dimDeviceId in self.dimmingList:
 						# Make sure the device is in the deviceList.
@@ -335,28 +335,28 @@ class Plugin(indigo.PluginBase):
 					# Reset the action flag.
 					goBrightenDim = False
 				# End it's time to go through brightening and dimming loops.
-				
+
 				## Update Sensors List ##
 				if goSensorRefresh:
 					self.updateSensorsList()
 					self.parseAllHueSensorsData()
 					# Reset the action flag.
 					goSensorRefresh = False
-					
+
 				## Update Lights List ##
 				if goLightsRefresh:
 					self.updateLightsList()
 					self.parseAllHueLightsData()
 					# Reset the action flag.
 					goLightsRefresh = False
-				
+
 				## Update Groups List ##
 				if goGroupsRefresh:
 					self.updateGroupsList()
 					self.parseAllHueGroupsData()
 					# Reset the action flag.
 					goGroupsRefresh = False
-				
+
 				## Check for Newer Plugin Versions ##
 				if goUpdateCheck:
 					self.updater.checkVersionPoll()
@@ -368,10 +368,10 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = u""
 					# Reset the action flag.
 					goErrorReset = False
-	
+
 				# Increment the loop counter.
 				loopCount += 1
-				
+
 				# Set action flags based on loop counter.
 				if loopCount % loopsForBrightenDim == 0:
 					goBrightenDim = True
@@ -385,17 +385,17 @@ class Plugin(indigo.PluginBase):
 					goUpdateCheck = True
 				if loopCount % loopsForErrorReset == 0:
 					goErrorReset = True
-	
+
 				# Reset the loop counter if it's reached its maximum.
 				if loopCount == loopCountMax:
 					loopCount = 0
-					
+
 			# End While True loop.
-		
+
 		except self.StopThread:
 			self.debugLog(u"runConcurrentThread stopped.")
 			pass
-		
+
 		self.debugLog(u"runConcurrentThread exiting.")
 
 	# Validate Device Configuration
@@ -405,14 +405,14 @@ class Plugin(indigo.PluginBase):
 		errorsDict = indigo.Dict()
 		errorsDict['showAlertText'] = ""
 		isError = False
-		
+
 		# Make sure we're still paired with the Hue hub.
 		if self.paired == False:
 			isError = True
 			errorsDict['bulbId'] = u"Not currently paired with the Hue hub. Close this window and use the Configure... option in the Plugins -> Hue Lights menu to pair Hue Lights with the Hue hub first."
 			errorsDict['showAlertText'] += errorsDict['bulbId']
 			return (False, valuesDict, errorsDict)
-			
+
 		# Check data based on which device config UI was returned.
 		#  -- Hue Bulb --
 		if typeId == "hueBulb":
@@ -422,9 +422,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"Please select a Hue Color/Ambiance light to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-			
+
 			bulbId = valuesDict['bulbId']
-			
+
 			# Make sure the device selected is a Hue device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/lights/%s" % (self.ipAddress, self.hostId, bulbId)
@@ -463,7 +463,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"The selected device is not a Hue Color/Ambiance light. Plesea select a Hue Color/Ambiance light to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the bulb ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -473,7 +473,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['bulbId'] = u"This Hue device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different Hue bulb to control."
 						errorsDict['showAlertText'] += errorsDict['bulbId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -490,7 +490,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -507,7 +507,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -517,7 +517,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (ID " + unicode(valuesDict['bulbId']) + ")"
 				return (True, valuesDict)
-				
+
 		#  -- Ambiance Lights --
 		if typeId == "hueAmbiance":
 			# Make sure a bulb was selected.
@@ -526,9 +526,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"Please select a Hue device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-			
+
 			bulbId = valuesDict['bulbId']
-			
+
 			# Make sure the device selected is a Hue device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/lights/%s" % (self.ipAddress, self.hostId, bulbId)
@@ -567,7 +567,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"The selected device is not an Ambiance light. Plesea select an Ambiance light to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the bulb ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -577,7 +577,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['bulbId'] = u"This Hue device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different Hue device to control."
 						errorsDict['showAlertText'] += errorsDict['bulbId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -594,7 +594,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -611,7 +611,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -621,7 +621,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (ID " + unicode(valuesDict['bulbId']) + ")"
 				return (True, valuesDict)
-				
+
 		#  -- LightStrips Device --
 		elif typeId == "hueLightStrips":
 			# Make sure a device was selected.
@@ -630,9 +630,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"Please select a LightStrips device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-			
+
 			bulbId = valuesDict['bulbId']
-			
+
 			# Make sure the device selected is a LightStrips device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/lights/%s" % (self.ipAddress, self.hostId, bulbId)
@@ -692,7 +692,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['bulbId'] = u"This LightStrip device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different device to control."
 						errorsDict['showAlertText'] += errorsDict['bulbId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -709,7 +709,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -726,7 +726,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -736,7 +736,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (ID " + unicode(valuesDict['bulbId']) + ")"
 				return (True, valuesDict)
-				
+
 		#  -- LivingColors Bloom Device --
 		elif typeId == "hueLivingColorsBloom":
 			# Make sure a device was selected.
@@ -745,9 +745,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"Please select a LivingColors Bloom device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-			
+
 			bulbId = valuesDict['bulbId']
-			
+
 			# Make sure the device selected is a LivingColors device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/lights/%s" % (self.ipAddress, self.hostId, bulbId)
@@ -786,7 +786,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"The selected device is not a LivingColors Bloom device. Plesea select a LivingColors Bloom device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the bulb ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -796,7 +796,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['bulbId'] = u"This LivingColors Bloom device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different device to control."
 						errorsDict['showAlertText'] += errorsDict['bulbId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -813,7 +813,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -830,7 +830,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -840,7 +840,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (ID " + unicode(valuesDict['bulbId']) + ")"
 				return (True, valuesDict)
-				
+
 		#  -- LivingWhites Device --
 		elif typeId == "hueLivingWhites":
 			# Make sure a device was selected.
@@ -849,9 +849,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"Please select a LivingWhites device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-			
+
 			bulbId = valuesDict['bulbId']
-			
+
 			# Make sure the device selected is a LightStrips device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/lights/%s" % (self.ipAddress, self.hostId, bulbId)
@@ -890,7 +890,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['bulbId'] = u"The selected device is not a LivingWhites device. Plesea select a LightStrips device to control."
 				errorsDict['showAlertText'] += errorsDict['bulbId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the bulb ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -900,7 +900,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['bulbId'] = u"This LivingWhites device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different device to control."
 						errorsDict['showAlertText'] += errorsDict['bulbId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -917,7 +917,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -934,7 +934,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -944,7 +944,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (ID " + unicode(valuesDict['bulbId']) + ")"
 				return (True, valuesDict)
-				
+
 		#  -- Hue Group --
 		if typeId == "hueGroup":
 			# Make sure a group was selected.
@@ -953,9 +953,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['groupId'] = u"Please select a Hue Group to control."
 				errorsDict['showAlertText'] += errorsDict['groupId']
 				return (False, valuesDict, errorsDict)
-			
+
 			groupId = valuesDict['groupId']
-			
+
 			# Make sure the device selected is a Hue group.
 			#   Get the group info directly from the hub.
 			command = "http://%s/api/%s/groups/%s" % (self.ipAddress, self.hostId, groupId)
@@ -994,7 +994,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['groupId'] = u"The selected item is not a Hue Group. Please select a Hue Group to control."
 				errorsDict['showAlertText'] += errorsDict['groupId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the group ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -1004,7 +1004,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['groupId'] = u"This Hue group is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different Hue group to control."
 						errorsDict['showAlertText'] += errorsDict['groupId'] + "\n\n"
-				
+
 			# Validate the default brightness is reasonable.
 			if valuesDict.get('defaultBrightness', "") != "":
 				try:
@@ -1021,7 +1021,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultBrightness'] = u"The Default Brightness must be a number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultBrightness'] + "\n\n"
-					
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -1038,7 +1038,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -1048,7 +1048,7 @@ class Plugin(indigo.PluginBase):
 				# Define the device's address to appear in Indigo.
 				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (GID " + unicode(valuesDict['groupId']) + ")"
 				return (True, valuesDict)
-				
+
 		# -- Hue Device Attribute Controller (Virtual Dimmer Device) --
 		elif typeId == "hueAttributeController":
 			# Make sure a Hue device was selected.
@@ -1056,13 +1056,13 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['bulbDeviceId'] = u"Please select a Hue device whose attribute will be controlled."
 				errorsDict['showAlertText'] += errorsDict['bulbDeviceId']
-				
+
 			# Make sure an Attribute to Control is selected.
 			if valuesDict.get('attributeToControl', "") == "":
 				isError = True
 				errorsDict['attributeToControl'] = u"Please select an Attribute to Control."
 				errorsDict['showAlertText'] += errorsDict['attributeToControl']
-				
+
 			# Validate the default ramp rate (transition time) is reasonable.
 			if valuesDict.get('rate', "") != "":
 				try:
@@ -1079,7 +1079,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"The Ramp Rate must be a number between 0 and 540 in increments of 0.1 seconds. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + "\n\n"
-					
+
 			# Validate the default on level.
 			if valuesDict.get('defaultOnLevel', "") != "":
 				try:
@@ -1096,7 +1096,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['defaultOnLevel'] = u"The Default On Level must be a whole number between 1 and 100. Error: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['defaultOnLevel'] + "\n\n"
-					
+
 			# Show errors if there are any.
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
@@ -1109,6 +1109,199 @@ class Plugin(indigo.PluginBase):
 				valuesDict['address'] = unicode(device.id) + u" (" + valuesDict['attributeToControl'] + u")"
 				return (True, valuesDict)
 
+		###########################################################################
+		#########start##################################################################
+		###########################################################################
+
+		#  -- deconz on/off Sensor (binary) --
+		if typeId == "deconzOnOffSensor":
+			# Make sure a on/off sensor was selected.
+			if valuesDict.get('sensorId', "") == "":
+				isError = True
+				errorsDict['sensorId'] = u"Please select a deconz OnOff Sensor."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+
+			sensorId = valuesDict['sensorId']
+
+			# Make sure the device selected is a deconz sensor device.
+			#   Get the device info directly from the hub.
+			command = "http://%s/api/%s/sensors/%s" % (self.ipAddress, self.hostId, sensorId)
+			self.debugLog(u"Sending URL request: " + command)
+			try:
+				r = requests.get(command, timeout=kTimeout)
+			except requests.exceptions.Timeout:
+				errorText = u"Failed to connect to the deconz hub at %s after %i seconds. - Check that the hub is connected and turned on." % (
+				self.ipAddress, kTimeout)
+				# Don't display the error if it's been displayed already.
+				if errorText != self.lastErrorMessage:
+					self.errorLog(errorText)
+					# Remember the error.
+					self.lastErrorMessage = errorText
+				return
+			except requests.exceptions.ConnectionError:
+				errorText = u"Failed to connect to the deconz hub at %s. - Check that the hub is connected and turned on." % (
+					self.ipAddress)
+				# Don't display the error if it's been displayed already.
+				if errorText != self.lastErrorMessage:
+					self.errorLog(errorText)
+					# Remember the error.
+					self.lastErrorMessage = errorText
+				return
+			self.debugLog(u"Data from hub: " + r.content)
+			# Convert the response to a Python object.
+			try:
+				sensor = json.loads(r.content)
+			except Exception, e:
+				# There was an error in the returned data.
+				indigo.server.log(
+					u"Error retrieving deconz device data from hub.  Error reported: " + unicode(e))
+				isError = True
+				errorsDict['sensorId'] = u"Error retrieving deconz device data from hub. See Indigo log."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+			if sensor.get('modelid', "") not in kDeconOnOffSensorDeviceIDs:
+				isError = True
+				errorsDict[
+					'sensorId'] = u"The selected device is not a deconz Motion Sensor. Plesea select a deconz Motion Sensor device."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+
+			# Make sure the sensor ID isn't used by another device.
+			for otherDeviceId in self.deviceList:
+				if otherDeviceId != deviceId:
+					otherDevice = indigo.devices[otherDeviceId]
+					if sensorId == otherDevice.pluginProps.get('sensorId', 0):
+						otherDevice = indigo.devices[otherDeviceId]
+						isError = True
+						errorsDict[
+							'sensorId'] = u"This deconz device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different deconz Motion Sensor."
+						errorsDict['showAlertText'] += errorsDict['sensorId'] + "\n\n"
+
+			# Show errors if there are any.
+			if isError:
+				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
+				return (False, valuesDict, errorsDict)
+
+			else:
+				# Define the device's address to appear in Indigo.
+				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (SID " + unicode(
+					valuesDict['sensorId']) + ")"
+				# If this was a copied device, some properties could
+				#   be invalid for this device type.  Let's make sure they're not.
+				valuesDict['SupportsOnState'] = True
+				valuesDict['SupportsSensorValue'] = False
+				valuesDict['enabledOnHub'] = True
+				valuesDict['manufacturerName'] = ""
+				valuesDict['modelId'] = ""
+				valuesDict['nameOnHub'] = ""
+				valuesDict['productId'] = ""
+				valuesDict['swVersion'] = ""
+				valuesDict['type'] = ""
+				valuesDict['uniqueId'] = ""
+				if valuesDict.get('sensorOffset', False):
+					valuesDict['sensorOffset'] = ""
+				if valuesDict.get('temperatureScale', False):
+					valuesDict['temperatureScale'] = ""
+				return (True, valuesDict)
+
+
+
+		#  -- deconz Cube Sensor (binary) --
+		if typeId == "deconzCubeSensor":
+			# Make sure a Cube sensor was selected.
+			if valuesDict.get('sensorId', "") == "":
+				isError = True
+				errorsDict['sensorId'] = u"Please select a deconz Cube Sensor."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+
+			sensorId = valuesDict['sensorId']
+
+			# Make sure the device selected is a deconz sensor device.
+			#   Get the device info directly from the hub.
+			command = "http://%s/api/%s/sensors/%s" % (self.ipAddress, self.hostId, sensorId)
+			self.debugLog(u"Sending URL request: " + command)
+			try:
+				r = requests.get(command, timeout=kTimeout)
+			except requests.exceptions.Timeout:
+				errorText = u"Failed to connect to the deconz hub at %s after %i seconds. - Check that the hub is connected and turned on." % (
+				self.ipAddress, kTimeout)
+				# Don't display the error if it's been displayed already.
+				if errorText != self.lastErrorMessage:
+					self.errorLog(errorText)
+					# Remember the error.
+					self.lastErrorMessage = errorText
+				return
+			except requests.exceptions.ConnectionError:
+				errorText = u"Failed to connect to the deconz hub at %s. - Check that the hub is connected and turned on." % (
+					self.ipAddress)
+				# Don't display the error if it's been displayed already.
+				if errorText != self.lastErrorMessage:
+					self.errorLog(errorText)
+					# Remember the error.
+					self.lastErrorMessage = errorText
+				return
+			self.debugLog(u"Data from hub: " + r.content)
+			# Convert the response to a Python object.
+			try:
+				sensor = json.loads(r.content)
+			except Exception, e:
+				# There was an error in the returned data.
+				indigo.server.log(
+					u"Error retrieving deconz device data from hub.  Error reported: " + unicode(e))
+				isError = True
+				errorsDict['sensorId'] = u"Error retrieving deconz device data from hub. See Indigo log."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+			if sensor.get('modelid', "") not in kDeconCubeSensorDeviceIDs:
+				isError = True
+				errorsDict[
+					'sensorId'] = u"The selected device is not a deconz Motion Sensor. Plesea select a deconz Motion Sensor device."
+				errorsDict['showAlertText'] += errorsDict['sensorId']
+				return (False, valuesDict, errorsDict)
+
+			# Make sure the sensor ID isn't used by another device.
+			for otherDeviceId in self.deviceList:
+				if otherDeviceId != deviceId:
+					otherDevice = indigo.devices[otherDeviceId]
+					if sensorId == otherDevice.pluginProps.get('sensorId', 0):
+						otherDevice = indigo.devices[otherDeviceId]
+						isError = True
+						errorsDict[
+							'sensorId'] = u"This deconz device is already being controlled by the \"" + otherDevice.name + "\" Indigo device. Choose a different deconz Motion Sensor."
+						errorsDict['showAlertText'] += errorsDict['sensorId'] + "\n\n"
+
+			# Show errors if there are any.
+			if isError:
+				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
+				return (False, valuesDict, errorsDict)
+
+			else:
+				# Define the device's address to appear in Indigo.
+				valuesDict['address'] = self.pluginPrefs.get('address', "") + " (SID " + unicode(
+					valuesDict['sensorId']) + ")"
+				# If this was a copied device, some properties could
+				#   be invalid for this device type.  Let's make sure they're not.
+				valuesDict['SupportsOnState'] = False
+				valuesDict['SupportsSensorValue'] = True
+				valuesDict['enabledOnHub'] = True
+				valuesDict['manufacturerName'] = ""
+				valuesDict['modelId'] = ""
+				valuesDict['nameOnHub'] = ""
+				valuesDict['productId'] = ""
+				valuesDict['swVersion'] = ""
+				valuesDict['type'] = ""
+				valuesDict['uniqueId'] = ""
+				if valuesDict.get('sensorOffset', False):
+					valuesDict['sensorOffset'] = ""
+				if valuesDict.get('temperatureScale', False):
+					valuesDict['temperatureScale'] = ""
+				return (True, valuesDict)
+###########################################################################
+#######slutt####################################################################
+###########################################################################
+
 		#  -- Hue Motion Sensor (Motion) --
 		if typeId == "hueMotionSensor":
 			# Make sure a motion sensor was selected.
@@ -1117,9 +1310,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"Please select a Hue Motion Sensor."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-			
+
 			sensorId = valuesDict['sensorId']
-			
+
 			# Make sure the device selected is a Hue sensor device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/sensors/%s" % (self.ipAddress, self.hostId, sensorId)
@@ -1158,7 +1351,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"The selected device is not a Hue Motion Sensor. Plesea select a Hue Motion Sensor device."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the sensor ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -1194,7 +1387,7 @@ class Plugin(indigo.PluginBase):
 				if valuesDict.get('temperatureScale', False):
 					valuesDict['temperatureScale'] = ""
 				return (True, valuesDict)
-				
+
 		#  -- Hue Motion Sensor (Temperature) --
 		if typeId == "hueMotionTemperatureSensor":
 			# Make sure a motion sensor was selected.
@@ -1203,9 +1396,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"Please select a Hue Motion Sensor."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-			
+
 			sensorId = valuesDict.get('sensorId', "0")
-			
+
 			# Make sure the device selected is a Hue sensor device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/sensors/%s" % (self.ipAddress, self.hostId, sensorId)
@@ -1244,7 +1437,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"The selected device is not a Hue Motion Sensor. Plesea select a Hue Motion Sensor device."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the sensor ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -1313,9 +1506,9 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"Please select a Hue Motion Sensor."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-			
+
 			sensorId = valuesDict['sensorId']
-			
+
 			# Make sure the device selected is a Hue sensor device.
 			#   Get the device info directly from the hub.
 			command = "http://%s/api/%s/sensors/%s" % (self.ipAddress, self.hostId, sensorId)
@@ -1354,7 +1547,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['sensorId'] = u"The selected device is not a Hue Motion Sensor. Plesea select a Hue Motion Sensor device."
 				errorsDict['showAlertText'] += errorsDict['sensorId']
 				return (False, valuesDict, errorsDict)
-				
+
 			# Make sure the sensor ID isn't used by another device.
 			for otherDeviceId in self.deviceList:
 				if otherDeviceId != deviceId:
@@ -1400,7 +1593,7 @@ class Plugin(indigo.PluginBase):
 			# Configuration was saved.  Rebuild the device if needed.
 			device = indigo.devices[deviceId]
 			self.rebuildDevice(device)
-	
+
 
 	# Validate Action Configuration.
 	########################################
@@ -1416,14 +1609,14 @@ class Plugin(indigo.PluginBase):
 		errorsDict = indigo.Dict()
 		errorsDict['showAlertText'] = ""
 		descString = u""
-		
+
 		# Make sure we're still paired with the Hue hub.
 		if self.paired == False:
 			isError = True
 			errorsDict['device'] = u"Not currently paired with the Hue hub. Use the Configure... option in the Plugins -> Hue Lights menu to pair Hue Lights with the Hue hub first."
 			errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
 			return (False, valuesDict, errorsDict)
-			
+
 		### RECALL HUE SCENE ###
 		if typeId == "recallScene":
 			descString = "recall hue scene"
@@ -1431,7 +1624,7 @@ class Plugin(indigo.PluginBase):
 			userId = valuesDict.get('userId', "")
 			groupId = valuesDict.get('groupId', "")
 			sceneLights = self.sceneLightsListGenerator("", valuesDict, typeId, deviceId)
-			
+
 			if sceneId != "":
 				sceneName = self.scenesDict[sceneId]['name']
 				descString += u" " + sceneName
@@ -1439,7 +1632,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['sceneId'] = u"A Scene must be selected."
 				errorsDict['showAlertText'] += errorsDict['sceneId'] + "\n\n"
-			
+
 			if userId != "":
 				if userId != "all":
 					userName = self.usersDict[userId]['name'].replace("#", " app on ")
@@ -1453,7 +1646,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['userId'] = u"A Scene Creator must be selected."
 				errorsDict['showAlertText'] += errorsDict['userId'] + "\n\n"
-			
+
 			if groupId != "":
 				if groupId == "0":
 					groupName = "All Hue Lights"
@@ -1465,12 +1658,12 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['groupId'] = u"A Group must be selected."
 				errorsDict['showAlertText'] += errorsDict['userId'] + "\n\n"
-			
+
 			if len(sceneLights) < 1:
 				isError = True
 				errorsDict['sceneLights'] = u"The selected Scene and Group Limit combination will prevent any lights from changing when this scene is recalled. Change the Scene or Group Limit selection and make sure at least 1 light is listed in the Lights Affected list."
 				errorsDict['showAlertText'] += errorsDict['sceneLights'] + "\n\n"
-				
+
 			if isError:
 				errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
 				return (False, valuesDict, errorsDict)
@@ -1484,7 +1677,7 @@ class Plugin(indigo.PluginBase):
 			useRateVariable = valuesDict.get('useRateVariable', False)
 			rate = valuesDict.get('rate', False)
 			rateVarId = valuesDict.get('rateVariable', False)
-			
+
 			# First make sure this is a Hue device and not an attribute controller.
 			if device.deviceTypeId == "hueAttributeController":
 				isError = True
@@ -1542,7 +1735,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['brightnessDevice'] = u"You cannot select the same dimmer as the one for which you're setting the brightness."
 						errorsDict['showAlertText'] += errorsDict['brightnessDevice'] + "\n\n"
-			
+
 			if not useRateVariable:
 				if not rate and rate.__class__ != bool:
 					isError = True
@@ -1573,7 +1766,7 @@ class Plugin(indigo.PluginBase):
 						isError = True
 						errorsDict['rateVariable'] = u"The specified variable does not exist in the Indigo database. Please choose a different variable."
 						errorsDict['showAlertText'] += errorsDict['rateVariable'] + "\n\n"
-		
+
 		### SET RGB LEVELS ###
 		elif typeId == "setRGB":
 			# Check the RGB values.
@@ -1592,7 +1785,7 @@ class Plugin(indigo.PluginBase):
 			useRateVariable = valuesDict.get('useRateVariable', False)
 			rateVariable = valuesDict.get('rateVariable', "")
 			rampRate = valuesDict.get('rate', "")
-			
+
 			# First make sure this is a Hue device and not an attribute controller.
 			if device.deviceTypeId == "hueAttributeController":
 				isError = True
@@ -1604,7 +1797,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device does not support color. Choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-			
+
 			# Validate red value.
 			try:
 				red = int(red)
@@ -1620,7 +1813,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['red'] = "Invalid Red value: " + unicode(e)
 				errorsDict['showAlertText'] += errorsDict['red'] + "\n\n"
-				
+
 			# Validate green value.
 			try:
 				green = int(green)
@@ -1636,7 +1829,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['green'] = "Invalid Green value: " + unicode(e)
 				errorsDict['showAlertText'] += errorsDict['green'] + "\n\n"
-				
+
 			# Validate blue value.
 			try:
 				blue = int(blue)
@@ -1652,7 +1845,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['blue'] = "Invalid Blue value: " + unicode(e)
 				errorsDict['showAlertText'] += errorsDict['blue'] + "\n\n"
-			
+
 			# Validate Ramp Rate.
 			if not useRateVariable:
 				# User entered a ramp rate value.
@@ -1689,7 +1882,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					if len(valuesDict.get('rate', "")) > 0:
 						descString += u" with ramp rate " + unicode(rampRate) + u" sec"
-					
+
 		### SET HSB ###
 		elif typeId == "setHSB":
 			# Check the HSB values.
@@ -1714,7 +1907,7 @@ class Plugin(indigo.PluginBase):
 			useRateVariable = valuesDict.get('useRateVariable', False)
 			rateVariable = valuesDict.get('rateVariable', "")
 			rampRate = valuesDict.get('rate', "")
-			
+
 			# First make sure this is a Hue device and not an attribute controller.
 			if device.deviceTypeId == "hueAttributeController":
 				isError = True
@@ -1726,7 +1919,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device does not support color. Choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-			
+
 			# Validate hue value.
 			try:
 				hue = int(hue)
@@ -1831,13 +2024,13 @@ class Plugin(indigo.PluginBase):
 					descString += u" value in variable \"" + indigo.variables[brightnessVariable].name + u"\""
 				elif brightnessSource == "dimmer":
 					descString += u" brightness of device \"" + indigo.devices[brightnessDevice].name + u"\""
-					
+
 				if useRateVariable == True:
 					descString += u" using ramp rate in variable \"" + indigo.variables[rateVariable].name + u"\"."
 				else:
 					if len(valuesDict.get('rate', "")) > 0:
 						descString += u" with ramp rate " + unicode(rampRate) + u" sec"
-					
+
 		### SET xyY ###
 		elif typeId == "setXYY":
 			# Check the xyY values.
@@ -1856,7 +2049,7 @@ class Plugin(indigo.PluginBase):
 			useRateVariable = valuesDict.get('useRateVariable', False)
 			rateVariable = valuesDict.get('rateVariable', "")
 			rampRate = valuesDict.get('rate', "")
-			
+
 			# First make sure this is a Hue device and not an attribute controller.
 			if device.deviceTypeId == "hueAttributeController":
 				isError = True
@@ -1868,7 +2061,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device does not support color. Choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-			
+
 			# Validate x chromatisity value.
 			try:
 				colorX = float(colorX)
@@ -1884,7 +2077,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['xyy_x'] = "Invalid x Chromatisety value: " + unicode(e)
 				errorsDict['showAlertText'] += errorsDict['xyy_x'] + "\n\n"
-				
+
 			# Validate y chromatisity value.
 			try:
 				colorY = float(colorY)
@@ -1953,7 +2146,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					if len(valuesDict.get('rate', "")) > 0:
 						descString += u" with ramp rate " + unicode(rampRate) + u" sec"
-					
+
 		### SET COLOR TEMPERATURE ###
 		elif typeId == "setCT":
 			# Check the Color Temperature values.
@@ -1984,7 +2177,7 @@ class Plugin(indigo.PluginBase):
 			useRateVariable = valuesDict.get('useRateVariable', False)
 			rateVariable = valuesDict.get('rateVariable', "")
 			rampRate = valuesDict.get('rate', "")
-			
+
 			# First make sure this is a Hue device and not an attribute controller.
 			if device.deviceTypeId == "hueAttributeController":
 				isError = True
@@ -1996,7 +2189,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device does not support variable color temperature. Choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-				
+
 			# Validate that a Preset Color Recipe item or Custom was selected.
 			if preset == False:
 				isError = True
@@ -2109,13 +2302,13 @@ class Plugin(indigo.PluginBase):
 						descString += u" using brightness value in variable \"" + indigo.variables[brightnessVariable].name + u"\""
 					elif brightnessSource == "dimmer":
 						descString += u" using brightness of device \"" + indigo.devices[brightnessDevice].name + u"\""
-					
+
 				if useRateVariable == True:
 					descString += u" using ramp rate in variable \"" + indigo.variables[rateVariable].name + u"\"."
 				else:
 					if len(valuesDict.get('rate', "")) > 0:
 						descString += u" with ramp rate " + unicode(rampRate) + u" sec"
-					
+
 		### EFFECT ###
 		elif typeId == "effect":
 			# First make sure this is a Hue device and not an attribute controller.
@@ -2129,7 +2322,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device does not support color effects. Choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-				
+
 			# Make sure an effect was specified.
 			effect = valuesDict.get('effect', "")
 			if not effect:
@@ -2138,7 +2331,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['showAlertText'] += errorsDict['effect'] + u"\n\n"
 			else:
 				descString = u"set hue device effect to \"" + effect + u"\""
-				
+
 		### SAVE PRESET ###
 		elif typeId == "savePreset":
 			# First make sure this is a Hue device and not an attribute controller.
@@ -2152,13 +2345,13 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device is not a compatible Hue device. Please choose a different device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-				
+
 			# Make sure the Preset Name isn't too long.
 			if len(valuesDict.get('presetName', "")) > 50:
 				isError = True
 				errorsDict['presetName'] = u"The Preset Name is too long. Please use a name that is no more than 50 characters long."
 				errorsDict['showAlertText'] += errorsDict['presetName'] + "\n\n"
-				
+
 			# Make sure a Preset was selected.
 			presetId = valuesDict.get('presetId', "")
 			if presetId == "":
@@ -2167,7 +2360,7 @@ class Plugin(indigo.PluginBase):
 				errorsDict['showAlertText'] += errorsDict['presetId'] + u"\n\n"
 			else:
 				descString = u"save hue device settings to preset " + unicode(presetId)
-			
+
 			# Validate Ramp Rate.
 			rampRate = valuesDict.get('rate', "")
 			if len(rampRate) > 0:
@@ -2185,7 +2378,7 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['rate'] = u"Invalid Ramp Rate value: " + unicode(e)
 					errorsDict['showAlertText'] += errorsDict['rate'] + u"\n\n"
-				
+
 		### RECALL PRESET ###
 		elif typeId == "recallPreset":
 			# First make sure this is a Hue device and not an attribute controller.
@@ -2203,7 +2396,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['device'] = u"The \"%s\" device is not a compatible Hue device. Please choose a Hue lighting device." % (device.name)
 				errorsDict['showAlertText'] += errorsDict['device'] + "\n\n"
-				
+
 			# Make sure a Preset was selected.
 			presetId = valuesDict.get('presetId', "")
 			if presetId == "":
@@ -2218,7 +2411,7 @@ class Plugin(indigo.PluginBase):
 					errorsDict['showAlertText'] += errorsDict['presetId'] + u"\n\n"
 				else:
 					descString = u"recall hue device settings from preset " + unicode(presetId)
-					
+
 			# Validate Ramp Rate.
 			rampRate = valuesDict.get('rate', "")
 			if len(rampRate) > 0:
@@ -2242,16 +2435,16 @@ class Plugin(indigo.PluginBase):
 			isError = True
 			errorsDict['presetId'] = u"The typeId \"" + unicode(typeId) + "\" wasn't recognized."
 			errorsDict['showAlertText'] += errorsDict['presetId'] + u"\n\n"
-			
+
 		# Define the description value.
 		valuesDict['description'] = descString
 		# Return an error if one exists.
 		if isError:
 			errorsDict['showAlertText'] = errorsDict['showAlertText'].strip()
 			return (False, valuesDict, errorsDict)
-			
+
 		return (True, valuesDict)
-		
+
 	# Validate Preferences Configuration.
 	########################################
 	def validatePrefsConfigUi(self, valuesDict):
@@ -2260,9 +2453,9 @@ class Plugin(indigo.PluginBase):
 		isError = False
 		errorsDict = indigo.Dict()
 		errorsDict['showAlertText'] = ""
-		
+
 		maxPresetCount = valuesDict.get('maxPresetCount', "")
-		
+
 		# Validate the IP Address field.
 		if valuesDict.get('address', "") == "":
 			# The field was left blank.
@@ -2270,21 +2463,21 @@ class Plugin(indigo.PluginBase):
 			isError = True
 			errorsDict['address'] = u"The IP Address field is blank. Please enter an IP Address for the Hue hub."
 			errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-		
+
 		else:
 			# The field wasn't blank. Check to see if the format is valid.
 			try:
 				# Try to format the IP Address as a 32-bit binary value. If this fails, the format was invalid.
 				self.debugLog(u"validatePrefsConfigUi: Validating IP address \"%s\"." % valuesDict['address'])
 				socket.inet_aton(valuesDict['address'])
-			
+
 			except socket.error:
 				# IP Address format was invalid.
 				self.debugLog(u"validatePrefsConfigUi: IP address format is invalid.")
 				isError = True
 				errorsDict['address'] = u"The IP Address is not valid. Please enter a valid IP address."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-		
+
 		if maxPresetCount == "":
 			# The field was left blank.
 			self.debugLog(u"validatePrefsConfigUi: maxPresetCount was left blank. Setting value to 30.")
@@ -2306,7 +2499,7 @@ class Plugin(indigo.PluginBase):
 				isError = True
 				errorsDict['maxPresetCount'] = u"The Preset Memories must be a number between 1 and 100. Error: " + unicode(e)
 				errorsDict['showAlertText'] += errorsDict['maxPresetCount'] + "\n\n"
-		
+
 		# If there haven't been any errors so far, try to connect to the Hue hub to see
 		#   if it's actually a Hue hub.
 		if not isError:
@@ -2316,31 +2509,31 @@ class Plugin(indigo.PluginBase):
 				self.debugLog(u"validatePrefsConfigUi: Accessing URL: %s" % command)
 				r = requests.get(command, timeout=kTimeout)
 				self.debugLog(u"validatePrefsConfigUi: Got response:\n%s" % r.content)
-				
+
 				# Quick and dirty check to see if this is a Philips Hue hub.
-				if "Philips hue bridge" not in r.content:
+				if "Philips hue bridge" not in r.content or "Phoscon-GW" not in r.content:
 					# If "Philips hue bridge" doesn't exist in the response, it's not a Hue hub.
 					self.debugLog(u"validatePrefsConfigUi: No \"Philips hue bridge\" string found in response. This isn't a Hue hub.")
 					isError = True
 					errorsDict['address'] = u"This doesn't appear to be a Philips Hue hub.  Please verify the IP address."
 					errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-				
+
 				else:
 					# This is likely a Hue hub.
 					self.debugLog(u"validatePrefsConfigUi: Verified that this is a Hue hub.")
-					
+
 			except requests.exceptions.Timeout:
 				self.debugLog(u"validatePrefsConfigUi: Connection to %s timed out after %i seconds." % (valuesDict['address'], kTimeout))
 				isError = True
 				errorsDict['address'] = u"Unable to reach the hub. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-			
+
 			except requests.exceptions.ConnectionError:
 				self.debugLog(u"validatePrefsConfigUi: Connection to %s failed. There was a connection error." % valuesDict['address'])
 				isError = True
 				errorsDict['address'] = u"Connection error. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-				
+
 			except Exception, e:
 				self.debugLog(u"validatePrefsConfigUi: Connection error. " + unicode(e))
 				isError = True
@@ -2353,16 +2546,16 @@ class Plugin(indigo.PluginBase):
 			return (False, valuesDict, errorsDict)
 		else:
 			return (True, valuesDict)
-	
+
 	# Plugin Configuration Dialog Closed
 	########################################
 	def closedPrefsConfigUi(self, valuesDict, userCancelled):
 		self.debugLog(u"closedPrefsConfigUi: Starting closedPrefsConfigUi.")
-		
+
 		# If the user didn't cancel the changes, take any needed actions as a result of the changes made.
 		if not userCancelled:
 			# Configuration was saved.
-			
+
 			# If the number of Preset Memories was changed, add or remove Presets as needed.
 			self.maxPresetCount = int(valuesDict.get('maxPresetCount', "30"))
 			presets = self.pluginPrefs.get('presets', "")
@@ -2406,7 +2599,7 @@ class Plugin(indigo.PluginBase):
 							# Key probably doesn't exist. Proceed as if no rate was saved.
 							presetRate = -1
 							pass
-						
+
 						# Display the Preset data in the Indigo log.
 						logRampRate = unicode(presetRate) + u" sec."
 						if presetRate == -1:
@@ -2427,7 +2620,7 @@ class Plugin(indigo.PluginBase):
 				indigo.server.log(u"Debug logging enabled")
 			else:
 				indigo.server.log(u"Debug logging disabled")
-	
+
 			# Update the IP address and Hue hub username (hostId) as well.
 			self.ipAddress = valuesDict.get('address', self.pluginPrefs['address'])
 			self.hostId = valuesDict.get('hostId', self.pluginPrefs['hostId'])
@@ -2473,12 +2666,12 @@ class Plugin(indigo.PluginBase):
 			if origDev.pluginProps != newDev.pluginProps:
 				return True
 			return False
-	
-	
+
+
 	########################################
 	# Indigo Control Methods
 	########################################
-	
+
 	# Dimmer/Relay Control Actions
 	########################################
 	def actionControlDimmerRelay(self, action, device):
@@ -2491,7 +2684,7 @@ class Plugin(indigo.PluginBase):
 		currentOnState = device.states['onOffState']
 		# Get key variables
 		command = action.deviceAction
-		
+
 		# Act based on the type of device.
 		#
 		# -- Hue Bulbs --
@@ -2501,7 +2694,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, Bulb is %s" % (command, bulbId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -2510,7 +2703,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -2532,7 +2725,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -2562,7 +2755,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -2578,14 +2771,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-			
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				try:
 					self.debugLog(u"device request status:\n%s" % action)
 				except Exception, e:
 					self.debugLog(u"device request status: (Unable to display action data due to error: " + unicode(e) + u")")
-				
+
 				actionColorVals = action.actionValue
 
 				useRGB = False
@@ -2629,7 +2822,7 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				# Enumerate through the possible color channels and extract each
 				# value from the actionValue (actionColorVals).
 				keyValueList = []
@@ -2637,7 +2830,7 @@ class Plugin(indigo.PluginBase):
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -2672,7 +2865,7 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
 
 				# Tell the device to change based on which method we've decided to use.
@@ -2689,7 +2882,7 @@ class Plugin(indigo.PluginBase):
 				# Tell the Indigo Server to update the color level states:
 				if len(keyValueList) > 0:
 					device.updateStatesOnServer(keyValueList)
-					
+
 			##### REQUEST STATUS #####
 			elif command == indigo.kDeviceAction.RequestStatus:
 				try:
@@ -2704,7 +2897,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled command \"%s\"" % (command))
 			pass
-		
+
 		#
 		# -- Hue Ambiance --
 		#
@@ -2713,7 +2906,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, Bulb is %s" % (command, bulbId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -2722,7 +2915,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -2744,7 +2937,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -2774,7 +2967,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -2790,14 +2983,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-			
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				try:
 					self.debugLog(u"device request status:\n%s" % action)
 				except Exception, e:
 					self.debugLog(u"device request status: (Unable to display action data due to error: " + unicode(e) + u")")
-				
+
 				actionColorVals = action.actionValue
 
 				useRGB = False
@@ -2829,13 +3022,13 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				keyValueList = []
 				for channel in channelKeys:
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -2861,7 +3054,7 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
 
 				if useRGB:
@@ -2874,7 +3067,7 @@ class Plugin(indigo.PluginBase):
 				# Tell the Indigo Server to update the color level states:
 				if len(keyValueList) > 0:
 					device.updateStatesOnServer(keyValueList)
-					
+
 			##### REQUEST STATUS #####
 			elif command == indigo.kDeviceAction.RequestStatus:
 				try:
@@ -2889,7 +3082,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled command \"%s\"" % (command))
 			pass
-		
+
 		#
 		# -- LightStrips --
 		#
@@ -2898,7 +3091,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, LightStrips device is %s" % (command, bulbId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -2907,7 +3100,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -2929,7 +3122,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -2959,7 +3152,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -2975,14 +3168,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the device.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				try:
 					self.debugLog(u"device request status:\n%s" % action)
 				except Exception, e:
 					self.debugLog(u"device request status: (Unable to display action data due to error: " + unicode(e) + u")")
-				
+
 				actionColorVals = action.actionValue
 
 				useRGB = False
@@ -3014,13 +3207,13 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				keyValueList = []
 				for channel in channelKeys:
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -3046,9 +3239,9 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
-				
+
 				if useRGB:
 					self.doRGB(device, redLevel, greenLevel, blueLevel)
 				elif useHSB:
@@ -3074,7 +3267,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled command \"%s\"" % (command))
 			pass
-		
+
 		#
 		# -- LivingColors Bloom --
 		#
@@ -3083,7 +3276,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, LivingColors Bloom device is %s" % (command, bulbId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -3092,7 +3285,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -3114,7 +3307,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -3144,7 +3337,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -3160,14 +3353,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the device.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				try:
 					self.debugLog(u"device request status:\n%s" % action)
 				except Exception, e:
 					self.debugLog(u"device request status: (Unable to display action data due to error: " + unicode(e) + u")")
-				
+
 				actionColorVals = action.actionValue
 
 				useRGB = False
@@ -3199,13 +3392,13 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				keyValueList = []
 				for channel in channelKeys:
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -3231,9 +3424,9 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
-				
+
 				if useRGB:
 					self.doRGB(device, redLevel, greenLevel, blueLevel)
 				elif useHSB:
@@ -3259,7 +3452,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled command \"%s\"" % (command))
 			pass
-		
+
 		#
 		# -- LivingWhites --
 		#
@@ -3268,7 +3461,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, LivingWhites device is %s" % (command, bulbId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -3277,7 +3470,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -3299,7 +3492,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -3329,7 +3522,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -3345,7 +3538,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the device.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				# This command should never be sent to this type of device because
@@ -3388,13 +3581,13 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				keyValueList = []
 				for channel in channelKeys:
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -3420,9 +3613,9 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
-				
+
 				if useRGB:
 					self.doRGB(device, redLevel, greenLevel, blueLevel)
 				elif useHSB:
@@ -3457,7 +3650,7 @@ class Plugin(indigo.PluginBase):
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', None)
 			self.debugLog(u"Command is %s, Group is %s" % (command, groupId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -3466,7 +3659,7 @@ class Plugin(indigo.PluginBase):
 					self.debugLog(u"device on: (Unable to display action data due to error: " + unicode(e) + u")")
 				# Turn it on.
 				self.doOnOff(device, True)
-				
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -3488,7 +3681,7 @@ class Plugin(indigo.PluginBase):
 				else:
 					# It's off. Turn it on.
 					self.doOnOff(device, True)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -3518,7 +3711,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -3534,14 +3727,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceProps(device, tempProps)
 				# Set the new brightness level on the bulb.
 				self.doBrightness(device, int(round(brightnessLevel / 100.0 * 255.0)))
-				
+
 			##### SET COLOR LEVELS #####
 			elif command == indigo.kDimmerRelayAction.SetColorLevels:
 				try:
 					self.debugLog(u"device request status:\n%s" % action)
 				except Exception, e:
 					self.debugLog(u"device request status: (Unable to display action data due to error: " + unicode(e) + u")")
-				
+
 				actionColorVals = action.actionValue
 
 				useRGB = False
@@ -3573,13 +3766,13 @@ class Plugin(indigo.PluginBase):
 				blueLevel = 0
 				whiteLevel = 0
 				colorTemp = 0
-				
+
 				keyValueList = []
 				for channel in channelKeys:
 					if channel in actionColorVals:
 						brightness = float(actionColorVals[channel])
 						brightnessByte = int(round(255.0 * (brightness / 100.0)))
-						
+
 						if channel in device.states:
 							if channel == "redLevel":
 								redLevel = brightnessByte
@@ -3605,9 +3798,9 @@ class Plugin(indigo.PluginBase):
 								colorTemp = brightness
 								if not isGenericInterface:
 									useColorTemp = True
-							
+
 							keyValueList.append({'key':channel, 'value':brightness})
-				
+
 				if useRGB:
 					self.doRGB(device, redLevel, greenLevel, blueLevel)
 				elif useHSB:
@@ -3633,7 +3826,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled command \"%s\"" % (command))
 			pass
-		
+
 		#
 		# -- Hue Attribute Controller --
 		#
@@ -3642,7 +3835,7 @@ class Plugin(indigo.PluginBase):
 			attributeToControl = device.pluginProps.get('attributeToControl', None)
 			rate = device.pluginProps.get('rate', "")
 			onLevel = device.pluginProps.get('defaultOnLevel', "")
-			
+
 			if bulbDeviceId == None:
 				indigo.server.log(u"Hue Attribute Controller \"" + device.name + u"\" has no Hue Bulb device defined as the control destination. Action ignored.", isError=True)
 				return None
@@ -3661,14 +3854,14 @@ class Plugin(indigo.PluginBase):
 				brightnessLevel = int(round(brightnessLevel / 100.0) * 255.0)
 				saturation = int(round(saturation / 100.0 * 255.0))
 				hue = int(hue * 182.0)
-				
+
 			if attributeToControl == None:
 				errorText = u"Hue Attribute Controller \"" + device.name + u"\" has no Attribute to Control specified. Action ignored."
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return None
-				
+
 			if rate == "":
 				# If a ramp rate wasn't specified, set to -1 to use default rate.
 				rate = -1
@@ -3682,7 +3875,7 @@ class Plugin(indigo.PluginBase):
 				except Exception, e:
 					self.debugLog(u"Invalid rate value. Error: " + unicode(e))
 					rate = -1
-					
+
 			if onLevel == "":
 				# Default on level wasn't specified.  Use 100% as default.
 				onLevel = 100
@@ -3696,9 +3889,9 @@ class Plugin(indigo.PluginBase):
 				except Exception, e:
 					onLevel = 100
 			convertedOnLevel = onLevel
-				
+
 			self.debugLog(u"Command is %s, Bulb device ID is %s" % (command, bulbDeviceId))
-			
+
 			##### TURN ON #####
 			if command == indigo.kDeviceAction.TurnOn:
 				try:
@@ -3744,7 +3937,7 @@ class Plugin(indigo.PluginBase):
 					self.doColorTemperature(bulbDevice, convertedOnLevel, brightnessLevel, rate)
 				# Update the virtual dimmer device.
 				self.updateDeviceState(device, 'brightnessLevel', onLevel)
-					
+
 			##### TURN OFF #####
 			elif command == indigo.kDeviceAction.TurnOff:
 				try:
@@ -3778,7 +3971,7 @@ class Plugin(indigo.PluginBase):
 					self.doColorTemperature(bulbDevice, 2000, brightnessLevel, rate)
 				# Update the virtual dimmer device.
 				self.updateDeviceState(device, 'brightnessLevel', 0)
-					
+
 			##### TOGGLE #####
 			elif command == indigo.kDeviceAction.Toggle:
 				try:
@@ -3857,7 +4050,7 @@ class Plugin(indigo.PluginBase):
 					self.updateDeviceState(device, 'brightnessLevel', 0)
 				else:
 					self.updateDeviceState(device, 'brightnessLevel', onLevel)
-			
+
 			##### SET BRIGHTNESS #####
 			elif command == indigo.kDeviceAction.SetBrightness:
 				try:
@@ -3891,7 +4084,7 @@ class Plugin(indigo.PluginBase):
 					self.doColorTemperature(bulbDevice, int(round(action.actionValue / 100.0 * 4500.0 + 2000.0)), brightnessLevel, rate)
 				# Update the virtual dimmer device.
 				self.updateDeviceState(device, 'brightnessLevel', action.actionValue)
-				
+
 			##### BRIGHTEN BY #####
 			elif command == indigo.kDeviceAction.BrightenBy:
 				try:
@@ -3929,7 +4122,7 @@ class Plugin(indigo.PluginBase):
 					self.doColorTemperature(bulbDevice, int(round(newValue / 100.0 * 4500.0 + 2000.0)), brightnessLevel, rate)
 				# Update the virtual dimmer device.
 				self.updateDeviceState(device, 'brightnessLevel', newValue)
-				
+
 			##### DIM BY #####
 			elif command == indigo.kDeviceAction.DimBy:
 				try:
@@ -3967,7 +4160,7 @@ class Plugin(indigo.PluginBase):
 					self.doColorTemperature(bulbDevice, int(round(newValue / 100.0 * 4500.0 + 2000.0)), brightnessLevel, rate)
 				# Update the virtual dimmer device.
 				self.updateDeviceState(device, 'brightnessLevel', newValue)
-				
+
 			##### REQUEST STATUS #####
 			elif command == indigo.kDeviceAction.RequestStatus:
 				try:
@@ -3985,7 +4178,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				indigo.server.log(u"Unhandled Hue Attribute Controller command \"%s\"" % (command))
 			pass
-	
+
 	# Sensor Action callback
 	######################
 	def actionControlSensor(self, action, device):
@@ -3996,17 +4189,17 @@ class Plugin(indigo.PluginBase):
 		# Get the current sensor value and on-state of the device.
 		sensorValue = device.states.get('sensorValue', None)
 		sensorOnState = device.states.get('onOffState', None)
-		
+
 		# Act based on the type of device.
 		#
 		# -- Hue Motion Sensor (Motion, Temperature and Luminance) --
 		#
-		if device.deviceTypeId in ['hueMotionSensor', 'hueMotionTemperatureSensor', 'hueMotionLightSensor']:
+		if device.deviceTypeId in ['deconzCubeSensor', 'deconzOnOffSensor', 'hueMotionSensor', 'hueMotionTemperatureSensor', 'hueMotionLightSensor']:
 			sensorId = device.pluginProps.get('sensorId', False)
 			hostId = self.hostId
 			self.ipAddress = self.pluginPrefs.get('address', False)
 			self.debugLog(u"Command is %s, Sensor is %s" % (action.sensorAction, sensorId))
-			
+
 			###### TURN ON ######
 			# Ignore turn on/off/toggle requests from clients since this is a read-only sensor.
 			if action.sensorAction == indigo.kSensorAction.TurnOn:
@@ -4021,7 +4214,7 @@ class Plugin(indigo.PluginBase):
 			# Ignore turn on/off/toggle requests from clients since this is a read-only sensor.
 			elif action.sensorAction == indigo.kSensorAction.Toggle:
 				indigo.server.log(u"ignored \"%s\" %s request (sensor is read-only)" % (device.name, "toggle"))
-		
+
 			###### STATUS REQUEST ######
 			elif action.sensorAction == indigo.kSensorAction.RequestStatus:
 				# Query hardware module (device) for its current status here:
@@ -4184,7 +4377,7 @@ class Plugin(indigo.PluginBase):
 		hue = int(round(hsb.hsv_h * 1.0))
 		saturation = int(round(hsb.hsv_s * 100.0))
 		brightness = int(round(hsb.hsv_v * 100.0))
-		
+
 		# Assign the values to the appropriate valuesDict items.
 		valuesDict['red'] = red
 		valuesDict['green'] = green
@@ -4229,46 +4422,46 @@ class Plugin(indigo.PluginBase):
 	########################################
 	# List Generation and Support Methods
 	########################################
-	
+
 	# Users List Item Selected (callback from action UI)
 	########################################
 	def usersListItemSelected(self, valuesDict=None, typeId="", deviceId=0):
 		self.debugLog(u"Starting usersListItemSelected.  valuesDict: " + unicode(valuesDict) + u", typeId: " + unicode(typeId) + u", targetId: " + unicode(deviceId))
-		
+
 		self.usersListSelection = valuesDict['userId']
 		# Clear these dictionary elements so the sceneLights list will be blank if the sceneId is blank.
 		valuesDict['sceneLights'] = list()
 		valuesDict['sceneId'] = ""
-		
+
 		return valuesDict
-		
+
 	# Scenes List Item Selected (callback from action UI)
 	########################################
 	def scenesListItemSelected(self, valuesDict=None, typeId="", deviceId=0):
 		self.debugLog(u"Starting scenesListItemSelected.  valuesDict: " + unicode(valuesDict) + u", typeId: " + unicode(typeId) + u", targetId: " + unicode(deviceId))
-		
+
 		self.sceneListSelection = valuesDict['sceneId']
-		
+
 		return valuesDict
-	
+
 	# Groups List Item Selected (callback from action UI)
 	########################################
 	def groupsListItemSelected(self, valuesDict=None, typeId="", deviceId=0):
 		self.debugLog(u"Starting groupsListItemSelected.  valuesDict: " + unicode(valuesDict) + u", typeId: " + unicode(typeId) + u", targetId: " + unicode(deviceId))
-		
+
 		self.groupListSelection = valuesDict['groupId']
-		
+
 		return valuesDict
-	
+
 
 	# Bulb List Generator
 	########################################
 	def bulbListGenerator(self, filter="", valuesDict=None, typeId="", targetId=0):
 		# Used in actions that need a list of Hue hub devices.
 		self.debugLog(u"Starting bulbListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  targetId: " + unicode(targetId))
-		
+
 		returnBulbList = list()
-		
+
 		# Iterate over our bulbs, and return the available list in Indigo's format
 		for bulbId, bulbDetails in self.lightsDict.items():
 			if typeId == "":
@@ -4284,94 +4477,94 @@ class Plugin(indigo.PluginBase):
 				returnBulbList.append([bulbId, bulbDetails['name']])
 			elif typeId == "hueLivingWhites" and bulbDetails['modelid'] in kLivingWhitesDeviceIDs:
 				returnBulbList.append([bulbId, bulbDetails['name']])
-			
+
 		# Debug
 		self.debugLog(u"bulbListGenerator: Return bulb list is %s" % returnBulbList)
-		
+
 		return returnBulbList
-		
+
 	# Group List Generator
 	########################################
 	def groupListGenerator(self, filter="", valuesDict=None, typeId="", targetId=0):
 		# Used in actions that need a list of Hue hub groups.
 		self.debugLog(u"Starting groupListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  targetId: " + unicode(targetId))
-		
+
 		returnGroupList = list()
-		
+
 		# Add the special default zero group to the beginning of the list.
 		returnGroupList.append([0, "0: (All Hue Lights)"])
 
 		# Iterate over our groups, and return the available list in Indigo's format
 		for groupId, groupDetails in sorted(self.groupsDict.items()):
-			
+
 			returnGroupList.append([groupId, unicode(groupId) + ": " + groupDetails['name']])
-			
+
 		# Debug
 		self.debugLog(u"groupListGenerator: Return group list is %s" % returnGroupList)
-		
+
 		return returnGroupList
-		
+
 	# Bulb Device List Generator
 	########################################
 	def bulbDeviceListGenerator(self, filter="", valuesDict=None, typeId="", targetId=0):
 		# Used in actions that need a list of Hue Lights plugin devices that aren't
 		#   attribute controllers or groups.
 		self.debugLog(u"Starting bulbDeviceListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  targetId: " + unicode(targetId))
-		
+
 		returnDeviceList = list()
-		
+
 		# Iterate over our devices, and return the available devices as a 2-tupple list.
 		for deviceId in self.deviceList:
 			device = indigo.devices[deviceId]
 			if device.deviceTypeId != "hueAttributeController":
 				returnDeviceList.append([deviceId, device.name])
-			
+
 		# Debug
 		self.debugLog(u"bulbDeviceListGenerator: Return Hue device list is %s" % returnDeviceList)
-		
+
 		return returnDeviceList
-		
+
 	# Generate Presets List
 	########################################
 	def presetListGenerator(self, filter="", valuesDict=None, typeId="", deviceId=0):
 		# Used by action dialogs to generate a list of Presets saved in the Hue Lights plugin prefs.
 		self.debugLog(u"Starting presetListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  deviceId: " + unicode(deviceId))
-		
+
 		theList = list()	# Menu item list.
-		
+
 		presets = self.pluginPrefs.get('presets', None)
 		self.debugLog(u"presetListGenerator: Presets in plugin prefs:\n" + unicode(presets))
-		
+
 		if presets != None:
 			presetNumber = 0
-				
+
 			for preset in presets:
 				# Determine whether the Preset has saved data or not.
 				hasData = u""
 				if len(presets[presetNumber][1]) > 0:
 					hasData = u"*"
-					
+
 				presetNumber += 1
 				presetName = preset[0]
 				theList.append((presetNumber, hasData + unicode(presetNumber) + u": " + unicode(presetName)))
 		else:
 			theList.append((0, u"-- no presets --"))
-			
+
 		return theList
-		
+
 	# Generate Users List
 	########################################
 	def usersListGenerator(self, filter="", valuesDict=None, typeId="", deviceId=0):
 		# Used by action dialogs to generate a list of Hue scene "owner" devices or "Creators".
 		self.debugLog(u"Starting usersListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  deviceId: " + unicode(deviceId))
-		
+
 		theList = list()	# Menu item list.
-		
+
 		users = self.usersDict
-		
+
 		# Add a list item at the top for all items.
 		theList.append(('all', "All Scene Creators"))
-		
+
 		if users != None:
 			for userId, userData in users.iteritems():
 				userName = userData.get('name', "(unknown)")
@@ -4384,19 +4577,19 @@ class Plugin(indigo.PluginBase):
 				#   won't have any scenes associated with it, which could be confusing.
 				if userName != "Indigo Hue Lights":
 					theList.append((userId, userName))
-	
+
 		return theList
-		
+
 	# Generate Scenes List
 	########################################
 	def scenesListGenerator(self, filter="", valuesDict=None, typeId="", deviceId=0):
 		# Used by action dialogs to list Hue scenes on the Hue hub for a particular "owner" device.
 		self.debugLog(u"Starting scenesListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  deviceId: " + unicode(deviceId))
-		
+
 		theList = list()	# Menu item list.
-		
+
 		scenes = self.scenesDict
-		
+
 		if scenes != None:
 			for sceneId, sceneData in scenes.iteritems():
 				sceneOwner = sceneData.get('owner', "")
@@ -4411,7 +4604,7 @@ class Plugin(indigo.PluginBase):
 				# Filter the list based on which Hue user (scene owner) is selected.
 				if sceneOwner == self.usersListSelection or self.usersListSelection == "all" or self.usersListSelection == "":
 					theList.append((sceneId, sceneDisplayName))
-	
+
 					# Create a descriptive list of the lights that are part of this scene.
 					self.sceneDescriptionDetail = u"Lights in this scene:\n"
 					i = 0
@@ -4421,20 +4614,20 @@ class Plugin(indigo.PluginBase):
 						lightName = self.lightsDict[light]['name']
 						self.sceneDescriptionDetail += lightName
 						i += 1
-	
+
 		return theList
-		
+
 	# Generate Lights List for a Scene
 	########################################
 	def sceneLightsListGenerator(self, filter="", valuesDict=None, typeId="", deviceId=0):
 		# Used by action dialogs to generate a list of lights in a Hue scene, limited by Hue group.
 		self.debugLog(u"Starting sceneLightsListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  deviceId: " + unicode(deviceId))
-		
+
 		theList = list()	# List item list.
-		
+
 		sceneId = valuesDict.get('sceneId', "")
 		groupId = valuesDict.get('groupId', "")
-		
+
 		if sceneId == "":
 			# The sceneId is blank. This only happens when the action/menu dialog is
 			#   called for the first time (or without any settings already saved). This
@@ -4451,7 +4644,7 @@ class Plugin(indigo.PluginBase):
 			except Exception, e:
 				# Just leave the sceneId blank.
 				pass
-	
+
 		# If the sceneId isn't blank, get the list of lights.
 		if sceneId != "":
 			# Get the list of lights in the scene.
@@ -4469,24 +4662,24 @@ class Plugin(indigo.PluginBase):
 				#   should appear in the list.
 				intersectingLights = sceneLights
 			self.debugLog(u"sceneLightsListGenerator: intersectingLights value: " + unicode(intersectingLights))
-			
+
 			# Get the name on the Hue hub for each light.
 			for lightId in intersectingLights:
 				lightName = self.lightsDict[lightId]['name']
 				theList.append((lightId, lightName))
-		
+
 		return theList
-		
+
 	# Generate Lights List for a Group
 	########################################
 	def groupLightsListGenerator(self, filter="", valuesDict=None, typeId="", deviceId=0):
 		# Used by action dialogs to generate lists of lights in a Hue group.
 		self.debugLog(u"Starting groupLightsListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  deviceId: " + unicode(deviceId))
-		
+
 		theList = list()	# List item list.
-		
+
 		groupId = valuesDict.get('groupId', "")
-		
+
 		# If the group ID is not blank, let's try to find the current selection in the valuesDict.
 		if groupId != "":
 			# Get the list of lights in the group.
@@ -4497,68 +4690,72 @@ class Plugin(indigo.PluginBase):
 			else:
 				groupLights = self.groupsDict[groupId]['lights']
 				self.debugLog(u"groupLightsListGenerator: groupLights value: " + unicode(groupLights))
-			
+
 			# Get the name on the Hue hub for each light.
 			for lightId in groupLights:
 				lightName = self.lightsDict[lightId]['name']
 				theList.append((lightId, lightName))
-		
+
 		return theList
-		
+
 	# Sensor List Generator
 	########################################
 	def sensorListGenerator(self, filter="", valuesDict=None, typeId="", targetId=0):
 		# Used in actions and device configuration windows that need a list of sensor dvices.
 		self.debugLog(u"Starting sensorListGenerator.\n  filter: " + unicode(filter) + u"\n  valuesDict: " + unicode(valuesDict) + u"\n  typeId: " + unicode(typeId) + u"\n  targetId: " + unicode(targetId))
-		
+
 		returnSensorList = list()
-		
+
 		# Iterate over our sensors, and return the available list in Indigo's format
 		for sensorId, sensorDetails in self.sensorsDict.items():
 			if filter == "":
 				# If no filter exists, list all devices.
 				returnSensorList.append([sensorId, sensorDetails['name']])
-			elif filter == "hueMotionSensor" and sensorDetails['type'] == "ZLLPresence" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
+			elif filter == "hueMotionSensor" and sensorDetails['type'] == "ZHAPresence" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
 				returnSensorList.append([sensorId, sensorDetails['name']])
-			elif filter == "hueMotionTemperatureSensor" and sensorDetails['type'] == "ZLLTemperature" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
+			elif filter == "deconzOnOffSensor" and sensorDetails['type'] == "ZHAOpenClose" and sensorDetails['modelid'] in kDeconOnOffSensorDeviceIDs:
+				returnSensorList.append([sensorId, sensorDetails['name']])
+			elif filter == "deconzCubeSensor" and sensorDetails['type'] == "ZHASwitch" and sensorDetails['modelid'] in kDeconCubeSensorDeviceIDs:
+				returnSensorList.append([sensorId, sensorDetails['name']])
+			elif filter == "hueMotionTemperatureSensor" and sensorDetails['type'] == "ZHATemperature" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
 				# The sensor name on the hub is going to be generic.  Find the "parent"
 				# motion sensor name by extracting the MAC address from the uniqueid value
 				# and searching for other sensors with the same MAC address in the uniqueid.
 				uniqueId = sensorDetails['uniqueid'].split("-")[0]
 				for key, value in self.sensorsDict.items():
 					if value.get('uniqueid', False) and value.get('type', False):
-						if uniqueId in value['uniqueid'] and value['type'] == "ZLLPresence":
+						if uniqueId in value['uniqueid'] and value['type'] == "ZHAPresence":
 							returnSensorList.append([sensorId, value['name']])
-			elif filter == "hueMotionLightSensor" and sensorDetails['type'] == "ZLLLightLevel" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
+			elif filter == "hueMotionLightSensor" and sensorDetails['type'] == "ZHALightLevel" and sensorDetails['modelid'] in kMotionSensorDeviceIDs:
 				# The sensor name on the hub is going to be generic.  Find the "parent"
 				# motion sensor name by extracting the MAC address from the uniqueid value
 				# and searching for other sensors with the same MAC address in the uniqueid.
 				uniqueId = sensorDetails['uniqueid'].split("-")[0]
 				for key, value in self.sensorsDict.items():
 					if value.get('uniqueid', False) and value.get('type', False):
-						if uniqueId in value['uniqueid'] and value['type'] == "ZLLPresence":
+						if uniqueId in value['uniqueid'] and value['type'] == "ZHAPresence":
 							returnSensorList.append([sensorId, value['name']])
 
 		# Debug
 		self.debugLog(u"sensorListGenerator: Return sensor list is %s" % returnSensorList)
-		
+
 		return returnSensorList
-		
+
 
 	########################################
 	# Device Update Methods
 	########################################
-	
+
 	# Update Device State
 	########################################
 	def updateDeviceState(self, device, state, newValue, decimals=None, newUiValue=None, newUiImage=None):
 		# Change the device state on the server
 		#   if it's different than the current state.
-		
+
 		# Note that the newUiImage value, if passed, should be a valid
 		# Indigo State Image Select Enumeration value as defined at
 		# http://wiki.indigodomo.com/doku.php?id=indigo_7_documentation:device_class.
-		
+
 		# Set the initial UI Value to the same raw value in newValue.
 		if newUiValue == None:
 			newUiValue = unicode(newValue)
@@ -4568,7 +4765,7 @@ class Plugin(indigo.PluginBase):
 		if device.states.get(state, None) is None:
 			self.debugLog(u"The " + device.name + u" device doesn't have the \"" + state + u"\" state.  Updating device.")
 			device.stateListOrDisplayStateIdChanged()
-		
+
 		# If a decimal precision was specified, attempt to round the new value to that precision.
 		if decimals is not None:
 			try:
@@ -4587,14 +4784,14 @@ class Plugin(indigo.PluginBase):
 		# If no precision was specified, default to zero decimals.
 		else:
 			decimals = 0
-		
+
 		# Now update the state if the new value (rounded if needed) is different.
 		if (newValue != device.states.get(state, None)):
 			try:
 				self.debugLog(u"updateDeviceState: Updating device " + device.name + u" state: " + unicode(state) + u". Old value = " + unicode(device.states.get(state, "")) + u". New value = " + unicode(newValue))
 			except Exception, e:
 				self.debugLog(u"updateDeviceState: Updating device " + device.name + u" state: (Unable to display state due to error: " + unicode(e) + u")")
-			
+
 			# Actually update the device state now.
 			device.updateStateOnServer(key=state, value=newValue, decimalPlaces=decimals, uiValue=newUiValue)
 			# Update the device UI icon if one was specified.
@@ -4613,25 +4810,25 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def rebuildDevice(self, device):
 		self.debugLog(u"Starting rebuildDevice.")
-		
+
 		# Copy the current device properties.
 		newProps = device.pluginProps
 
 		# Check the device for missing states and properties and fix as needed.
-		
+
 		# Prior to version 1.1.0, the "modelId" property did not exist in lighting devices.
 		#   If that property does not exist, force an update.
 		if device.deviceTypeId in kLightDeviceTypeIDs and not device.pluginProps.get('modelId', False):
 			self.debugLog(u"The " + device.name + u" Hue light device doesn't have a modelId attribute.  Adding it.")
 			newProps['modelId'] = u""
 			device.replacePluginPropsOnServer(newProps)
-		
+
 		# Prior to version 1.3.8, the "alertMode" state didn't exist in Hue Group devices.
 		#   If that state does not exist, force the device state list to be updated.
 		if device.deviceTypeId == "hueGroup" and not device.states.get('alertMode', False):
 			self.debugLog(u"The " + device.name + u" Hue group device doesn't have an alertMode state.  Updating device.")
 			device.stateListOrDisplayStateIdChanged()
-			
+
 		# Prior to version 1.4, the color device properties did not exist in lighting devices.
 		#   If any of those properties don't exist, update the device properties based on model ID.
 		if device.deviceTypeId in kLightDeviceTypeIDs and device.configured:
@@ -4740,12 +4937,12 @@ class Plugin(indigo.PluginBase):
 	########################################
 	# Hue Communication Methods
 	########################################
-	
+
 	# Get Bulb Status
 	########################################
 	def getBulbStatus(self, deviceId):
 		# Get device status.
-		
+
 		device = indigo.devices[deviceId]
 		self.debugLog(u"Get device status for " + device.name)
 		# Proceed based on the device type.
@@ -4783,7 +4980,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.debugLog(u"No bulbId exists in the \"%s\" device. New device perhaps." % (device.name))
 				return
-			
+
 		self.debugLog(u"Data from hub: " + r.content)
 		# Convert the response to a Python object.
 		try:
@@ -4791,7 +4988,7 @@ class Plugin(indigo.PluginBase):
 		except Exception, e:
 			indigo.server.log(u"Error retrieving Hue bulb status: " + unicode(e))
 			return False
-			
+
 		### Parse Data
 		#
 		# Sanity check the returned data first.
@@ -4804,15 +5001,15 @@ class Plugin(indigo.PluginBase):
 		except KeyError:
 			errorDict = []
 			# If there was a KeyError, then there were no processing errors.
-		
+
 		# Call the method to update the Indigo device with the Hue device info.
 		self.parseOneHueLightData(bulb, device)
-		
+
 	# Get Group Status
 	########################################
 	def getGroupStatus(self, deviceId):
 		# Get group status.
-		
+
 		device = indigo.devices[deviceId]
 		# Get the groupId from the device properties.
 		groupId = device.pluginProps.get('groupId', -1)
@@ -4843,16 +5040,16 @@ class Plugin(indigo.PluginBase):
 		else:
 			self.debugLog(u"No group ID was provided.")
 			return
-		
+
 		self.debugLog(u"Data from hub: " + r.content)
-		
+
 		# Convert the response to a Python object.
 		try:
 			group = json.loads(r.content)
 		except Exception, e:
 			indigo.server.log(u"Error retrieving Hue group status: " + unicode(e))
 			return
-		
+
 		### Parse Data
 		#
 		# Sanity check the returned data first.
@@ -4873,7 +5070,7 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def getSensorStatus(self, deviceId):
 		# Get sensor status.
-		
+
 		device = indigo.devices[deviceId]
 		# Get the sensorId from the device properties.
 		sensorId = device.pluginProps.get('sensorId', -1)
@@ -4906,7 +5103,7 @@ class Plugin(indigo.PluginBase):
 			self.debugLog(u"No sensorId exists in the \"%s\" device. New device perhaps." % (device.name))
 			return
 		# End if sensorId is defined.
-		
+
 		self.debugLog(u"Data from hub: " + r.content)
 		# Convert the response to a Python object.
 		try:
@@ -4914,7 +5111,7 @@ class Plugin(indigo.PluginBase):
 		except Exception, e:
 			indigo.server.log(u"Error retrieving Hue sensor status: " + unicode(e))
 			return False
-			
+
 		### Parse Data
 		#
 		# Sanity check the returned data first.
@@ -4927,11 +5124,11 @@ class Plugin(indigo.PluginBase):
 		except KeyError:
 			errorDict = []
 			# If there was a KeyError, then there were no processing errors.
-		
+
 		# Call the method to update the Indigo device with the Hue device info.
 		self.parseOneHueSensorData(sensor, device)
 
-	
+
 	# Get Entire Hue Hub Config
 	########################################
 	def getHueConfig(self):
@@ -4949,10 +5146,10 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Force a timeout
 		socket.setdefaulttimeout(kTimeout)
-		
+
 		try:
 			# Send the command and parse the response
 			command = "http://%s/api/%s/" % (self.ipAddress, self.hostId)
@@ -4960,11 +5157,11 @@ class Plugin(indigo.PluginBase):
 			r = requests.get(command, timeout=kTimeout)
 			hueConfigResponseData = json.loads(r.content)
 			self.debugLog(u"Got response %s" % hueConfigResponseData)
-			
+
 			# We should have a dictionary. If so, it's a Hue configuration response.
 			if isinstance(hueConfigResponseData, dict):
 				self.debugLog(u"Loaded entire Hue hub configuration - %s" % (hueConfigResponseData))
-				
+
 				# Load the entire configuration into one big dictionary object.
 				self.hueConfigDict = hueConfigResponseData
 				# Now separate out the component obects into various dictionaries to
@@ -4978,20 +5175,20 @@ class Plugin(indigo.PluginBase):
 				self.scenesDict		= hueConfigResponseData.get('scenes', dict())
 				self.rulesDict		= hueConfigResponseData.get('rules', dict())
 				self.schedulesDict	= hueConfigResponseData.get('schedules', dict())
-			
+
 				# Make sure the plugin knows it's actually paired now.
 				self.paired = True
-				
+
 			elif isinstance(hueConfigResponseData, list):
 				# Get the first item
 				firstResponseItem = hueConfigResponseData[0]
-				
+
 				# Did we get an error?
 				errorDict = firstResponseItem.get('error', None)
 				if errorDict is not None:
-					
+
 					errorCode = errorDict.get('type', None)
-					
+
 					# Is this a link button not pressed error?
 					if errorCode == 1:
 						errorText = u"Not paired with the Hue hub. Press the middle button on the Hue hub, then press the Pair Now button in the Hue Lights Configuration window (Plugins menu)."
@@ -4999,20 +5196,20 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-						
+
 					else:
 						errorText = u"Error #%i from Hue hub when getting the Hue hub configuraiton. Description is \"%s\"." % (errorCode, errorDict.get('description', u"(no description"))
 						self.errorLog(errorText)
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-					
+
 				else:
 					indigo.server.log(u"Unexpected response from Hue hub (%s) when getting the Hue hub configuration!" % (hueConfigResponseData))
-					
+
 			else:
 				indigo.server.log(u"Unexpected response from Hue hub (%s) when getting the Hue hub configuration!" % (hueConfigResponseData))
-			
+
 		except requests.exceptions.Timeout:
 			errorText = u"Failed to load the configuration from the Hue hub at %s after %i seconds - check settings and retry." % (self.ipAddress, kTimeout)
 			# Don't display the error if it's been displayed already.
@@ -5020,7 +5217,7 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
-			
+
 		except requests.exceptions.ConnectionError:
 			errorText = u"Failed to connect to the Hue hub at %s. - Check that the hub is connected, turned on and the network settings are correct." % (self.ipAddress)
 			# Don't display the error if it's been displayed already.
@@ -5029,10 +5226,10 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 			return
-			
+
 		except Exception, e:
 			self.errorLog(u"Unable to obtain the configuration from the Hue hub." + unicode(e))
-	
+
 	# Update Lights List
 	########################################
 	def updateLightsList(self):
@@ -5045,13 +5242,13 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Remember the current number of Hue lights to see if new ones have been added.
 		lastLightsCount = len(self.lightsDict)
-		
+
 		# Force a timeout
 		socket.setdefaulttimeout(kTimeout)
-		
+
 		try:
 			# Parse the response
 			command = "http://%s/api/%s/lights" % (self.ipAddress, self.hostId)
@@ -5059,12 +5256,12 @@ class Plugin(indigo.PluginBase):
 			r = requests.get(command, timeout=kTimeout)
 			lightsListResponseData = json.loads(r.content)
 			self.debugLog(u"Got response %s" % lightsListResponseData)
-			
+
 			# We should have a dictionary. If so, it's a light list
 			if isinstance(lightsListResponseData, dict):
 				self.debugLog(u"Loaded lights list - %s" % (lightsListResponseData))
 				self.lightsDict = lightsListResponseData
-				
+
 				# See if there are more lights now than there were last time we checked.
 				if len(self.lightsDict) > lastLightsCount and lastLightsCount is not 0:
 					lightsCountChange = len(self.lightsDict) - lastLightsCount
@@ -5078,20 +5275,20 @@ class Plugin(indigo.PluginBase):
 						indigo.server.log(u"%i Hue light removal was detected from the Hue hub. Check your Hue Lights Indigo devices. One of them may have been controlling the missing Hue lights." % lightsCountChange)
 					else:
 						indigo.server.log(u"%i Hue light removals were detected on the Hue hub. Check your Hue Lights Indigo devices. Some of them may have been controlling the missing Hue lights." % lightsCountChange)
-					
+
 				# Make sure the plugin knows it's actually paired now.
 				self.paired = True
-				
+
 			elif isinstance(lightsListResponseData, list):
 				# Get the first item
 				firstResponseItem = lightsListResponseData[0]
-				
+
 				# Did we get an error?
 				errorDict = firstResponseItem.get('error', None)
 				if errorDict is not None:
-					
+
 					errorCode = errorDict.get('type', None)
-					
+
 					# Is this a link button not pressed error?
 					if errorCode == 1:
 						errorText = u"Not paired with the Hue hub. Press the middle button on the Hue hub, then press the Pair Now button in the Hue Lights Configuration window (Plugins menu)."
@@ -5099,20 +5296,20 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-						
+
 					else:
 						errorText = u"Error #%i from Hue hub when loading available devices. Description is \"%s\"." % (errorCode, errorDict.get('description', u"(no description"))
 						self.errorLog(errorText)
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-					
+
 				else:
 					indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available devices!" % (lightsListResponseData))
-					
+
 			else:
 				indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available devices!" % (lightsListResponseData))
-			
+
 		except requests.exceptions.Timeout:
 			errorText = u"Failed to load lights list from the Hue hub at %s after %i seconds - check settings and retry." % (self.ipAddress, kTimeout)
 			# Don't display the error if it's been displayed already.
@@ -5120,7 +5317,7 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
-			
+
 		except requests.exceptions.ConnectionError:
 			errorText = u"Failed to connect to the Hue hub at %s. - Check that the hub is connected, turned on and the network settings are correct." % (self.ipAddress)
 			# Don't display the error if it's been displayed already.
@@ -5129,7 +5326,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 			return
-			
+
 		except Exception, e:
 			errorText = u"Unable to obtain list of Hue lights from the hub." + unicode(e)
 			# Don't display the error if it's been displayed already.
@@ -5137,7 +5334,7 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
-	
+
 	# Update Groups List
 	########################################
 	def updateGroupsList(self):
@@ -5150,13 +5347,13 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Remember the current number of Hue groups to see if new ones have been added.
 		lastGroupsCount = len(self.groupsDict)
-		
+
 		# Force a timeout
 		socket.setdefaulttimeout(kTimeout)
-		
+
 		try:
 			# Parse the response
 			command = "http://%s/api/%s/groups" % (self.ipAddress, self.hostId)
@@ -5164,12 +5361,12 @@ class Plugin(indigo.PluginBase):
 			r = requests.get(command, timeout=kTimeout)
 			groupsListResponseData = json.loads(r.content)
 			self.debugLog(u"Got response %s" % groupsListResponseData)
-			
+
 			# We should have a dictionary. If so, it's a group list
 			if isinstance(groupsListResponseData, dict):
 				self.debugLog(u"Loaded groups list - %s" % (groupsListResponseData))
 				self.groupsDict = groupsListResponseData
-				
+
 				# See if there are more groups now than there were last time we checked.
 				if len(self.groupsDict) > lastGroupsCount and lastGroupsCount is not 0:
 					groupsCountChange = len(self.groupsDict) - lastGroupsCount
@@ -5185,17 +5382,17 @@ class Plugin(indigo.PluginBase):
 						indigo.server.log(u"%i fewer Hue groups were found on the Hue hub. Check your Hue Lights Indigo devices. Some of them may have been controlling the missing Hue groups." % groupsCountChange)
 				# Make sure the plugin knows it's actually paired now.
 				self.paired = True
-				
+
 			elif isinstance(groupsListResponseData, list):
 				# Get the first item
 				firstResponseItem = groupsListResponseData[0]
-				
+
 				# Did we get an error?
 				errorDict = firstResponseItem.get('error', None)
 				if errorDict is not None:
-					
+
 					errorCode = errorDict.get('type', None)
-					
+
 					# Is this a link button not pressed error?
 					if errorCode == 1:
 						errorText = u"Not paired with the Hue hub. Press the middle button on the Hue hub, then press the Pair Now button in the Hue Lights Configuration window (Plugins menu)."
@@ -5203,20 +5400,20 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-						
+
 					else:
 						errorText = u"Error #%i from Hue hub when loading available groups. Description is \"%s\"." % (errorCode, errorDict.get('description', u"(no description"))
 						self.errorLog(errorText)
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-					
+
 				else:
 					indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available groups!" % (groupsListResponseData))
-					
+
 			else:
 				indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available groups!" % (groupsListResponseData))
-			
+
 		except requests.exceptions.Timeout:
 			errorText = u"Failed to load groups list from the Hue hub at %s after %i seconds - check settings and retry." % (self.ipAddress, kTimeout)
 			# Don't display the error if it's been displayed already.
@@ -5224,7 +5421,7 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
-			
+
 		except requests.exceptions.ConnectionError:
 			errorText = u"Failed to connect to the Hue hub at %s. - Check that the hub is connected, turned on and the network settings are correct." % (self.ipAddress)
 			# Don't display the error if it's been displayed already.
@@ -5233,10 +5430,10 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 			return
-			
+
 		except Exception, e:
 			self.errorLog(u"Unable to obtain list of Hue groups from the hub." + unicode(e))
-	
+
 	# Update Sensors List
 	########################################
 	def updateSensorsList(self):
@@ -5249,13 +5446,13 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Remember the current number of sensors to see if new ones have been added.
 		lastSensorsCount = len(self.sensorsDict)
-		
+
 		# Force a timeout
 		socket.setdefaulttimeout(kTimeout)
-		
+
 		try:
 			# Parse the response
 			command = "http://%s/api/%s/sensors" % (self.ipAddress, self.hostId)
@@ -5263,12 +5460,12 @@ class Plugin(indigo.PluginBase):
 			r = requests.get(command, timeout=kTimeout)
 			sensorsListResponseData = json.loads(r.content)
 			## self.debugLog(u"Got response %s" % sensorsListResponseData)
-			
+
 			# We should have a dictionary. If so, it's a sensors list
 			if isinstance(sensorsListResponseData, dict):
 				## self.debugLog(u"Loaded sensors list - %s" % (sensorsListResponseData))
 				self.sensorsDict = sensorsListResponseData
-				
+
 				# See if there are more sensors now than there were last time we checked.
 				if len(self.sensorsDict) > lastSensorsCount and lastSensorsCount is not 0:
 					sensorsCountChange = len(self.sensorsDict) - lastSensorsCount
@@ -5284,17 +5481,17 @@ class Plugin(indigo.PluginBase):
 						indigo.server.log(u"%i fewer Hue sensors were found on the Hue hub. Check your Hue Lights Indigo devices. Some of them may have been controlling the missing Hue sensors." % sensorsCountChange)
 				# Make sure the plugin knows it's actually paired now.
 				self.paired = True
-				
+
 			elif isinstance(sensorsListResponseData, list):
 				# Get the first item
 				firstResponseItem = sensorsListResponseData[0]
-				
+
 				# Did we get an error?
 				errorDict = firstResponseItem.get('error', None)
 				if errorDict is not None:
-					
+
 					errorCode = errorDict.get('type', None)
-					
+
 					# Is this a link button not pressed error?
 					if errorCode == 1:
 						errorText = u"Not paired with the Hue hub. Press the middle button on the Hue hub, then press the Pair Now button in the Hue Lights Configuration window (Plugins menu)."
@@ -5302,20 +5499,20 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-						
+
 					else:
 						errorText = u"Error #%i from Hue hub when loading available sensors. Description is \"%s\"." % (errorCode, errorDict.get('description', u"(no description"))
 						self.errorLog(errorText)
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						self.paired = False
-					
+
 				else:
 					indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available sensors!" % (sensorsListResponseData))
-					
+
 			else:
 				indigo.server.log(u"Unexpected response from Hue hub (%s) when loading available sensors!" % (sensorsListResponseData))
-			
+
 		except requests.exceptions.Timeout:
 			errorText = u"Failed to load sensors list from the Hue hub at %s after %i seconds - check settings and retry." % (self.ipAddress, kTimeout)
 			# Don't display the error if it's been displayed already.
@@ -5323,7 +5520,7 @@ class Plugin(indigo.PluginBase):
 				self.errorLog(errorText)
 				# Remember the error.
 				self.lastErrorMessage = errorText
-			
+
 		except requests.exceptions.ConnectionError:
 			errorText = u"Failed to connect to the Hue hub at %s. - Check that the hub is connected, turned on and the network settings are correct." % (self.ipAddress)
 			# Don't display the error if it's been displayed already.
@@ -5332,7 +5529,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 			return
-			
+
 		except Exception, e:
 			self.errorLog(u"Unable to obtain list of Hue sensors from the hub." + unicode(e))
 
@@ -5341,24 +5538,24 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def parseAllHueLightsData(self):
 		self.debugLog(u"Starting parseAllHueLightsData.")
-		
+
 		# Itterate through all the Indigo devices and look for Hue light changes in the
 		#   self.lightsDict that changed, then update the Indigo device states and properties
 		#   as needed.  This method does no actual Hue hub communication.  It just updates
 		#   Indigo devices with information already obtained through the use of the
 		#   self.updateLightsList.
-		
+
 		self.debugLog(u"parseAllHueLightsData: There are %i lights on the Hue bridge and %i Indigo devices controlling Hue devices." % (len(self.lightsDict), len(self.deviceList)))
 		# Start going through all the devices in the self.deviceList and update any Indigo
 		#   devices that are controlling the Hue light devices.
 		for deviceId in self.deviceList:
 			device = indigo.devices[deviceId]
 			# self.debugLog(u"parseAllHueLightsData: Looking at Indigo device \"%s\"." % (device.name))
-		
+
 			# If this Indigo device is a supported light device...
 			if device.deviceTypeId in kLightDeviceTypeIDs:
 				## self.debugLog(u"parseAllHueLightsData: Indigo device \"%s\" is not for a Hue group. Proceeing." % (device.name))
-				
+
 				# Go through each Hue light device and see if it is controlled by this Indigo device.
 				for bulbId in self.lightsDict:
 					# Extract the bulb object from the lightsDict.
@@ -5376,17 +5573,17 @@ class Plugin(indigo.PluginBase):
 				# End loop through self.lightsDict.
 			# End check if this is not a Hue Group device.
 		# End loop through self.deviceList.
-	
+
 	# Parse One Hue Light Data
 	########################################
 	def parseOneHueLightData(self, bulb, device):
 		## self.debugLog(u"Starting parseOneHueLightData.")
-		
+
 		# Take the bulb passed to this method, look up the data already obtained from the Hue hub
 		# and parse the hub data for this bulb, making changes to the Indigo device as needed.
-		
+
 		deviceId = device.id
-		
+
 		# Separate out the specific Hue bulb data.
 		# Data common to all device types...
 		#   Value assignments.
@@ -5400,7 +5597,7 @@ class Plugin(indigo.PluginBase):
 		swVersion = bulb.get('swversion', "")
 		type = bulb.get('type', "")
 		uniqueId = bulb.get('uniqueid', "")
-		
+
 		#   Value manipulation.
 		# Convert brightness from 0-255 range to 0-100 range.
 		brightnessLevel = int(round(brightness / 255.0 * 100.0))
@@ -5411,8 +5608,8 @@ class Plugin(indigo.PluginBase):
 		#   is reporting, the effective brightness is zero.
 		if onState == False:
 			brightnessLevel = 0
-		
-		#   Update Indigo states and properties common to all Hue devices.	
+
+		#   Update Indigo states and properties common to all Hue devices.
 		tempProps = device.pluginProps
 		# Update the Hue device name.
 		if nameOnHub != device.pluginProps.get('nameOnHub', False):
@@ -5449,7 +5646,7 @@ class Plugin(indigo.PluginBase):
 		self.updateDeviceState(device, 'alertMode', alert)
 
 		# Device-type-specific data...
-		
+
 		# -- Hue Bulbs --
 		if modelId in kHueBulbDeviceIDs:
 			#   Value assignment.  (Using the get() method to avoid KeyErrors).
@@ -5463,7 +5660,7 @@ class Plugin(indigo.PluginBase):
 			colorTemp = bulb['state'].get('ct', 0)
 			colorMode = bulb['state'].get('colormode', "ct")
 			effect = bulb['state'].get('effect', "none")
-	
+
 			#   Value manipulation.
 			# Convert from HSB to RGB, scaling the hue and saturation values appropriately.
 			hsb = HSVColor(hue / 182.0, saturation / 255.0, brightness / 255.0)
@@ -5506,7 +5703,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', colorRed)
 				self.updateDeviceState(device, 'colorGreen', colorGreen)
 				self.updateDeviceState(device, 'colorBlue', colorBlue)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states or "redLevel" in device.states:
 					# White Level (negative saturation, 0-100).
@@ -5540,7 +5737,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', 0)
 				self.updateDeviceState(device, 'colorGreen', 0)
 				self.updateDeviceState(device, 'colorBlue', 0)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states or "redLevel" in device.states:
 					# White Level (negative saturation, 0-100).
@@ -5554,7 +5751,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				# Unrecognized on state, but not important enough to mention in regular log.
 				self.debugLog(u"Hue bulb unrecognized on state given by hub: " + unicode(bulb['state']['on']))
-			
+
 			# Update the effect state (regardless of onState).
 			self.updateDeviceState(device, 'effect', effect)
 
@@ -5596,7 +5793,7 @@ class Plugin(indigo.PluginBase):
 			colorTemp = bulb['state'].get('ct', 0)
 			colorMode = bulb['state'].get('colormode', "ct")
 			effect = bulb['state'].get('effect', "none")
-	
+
 			#   Value manipulation.
 			# Must first test color temp value. If it's zero, the formula throws a divide by zero execption.
 			if colorTemp > 0:
@@ -5616,7 +5813,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorTemp', colorTemp)
 				# Color Mode.
 				self.updateDeviceState(device, 'colorMode', colorMode)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states:
 					# White Level (set to 100 at all times for Ambiance bulbs).
@@ -5634,7 +5831,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorTemp', colorTemp)
 				# Color Mode.
 				self.updateDeviceState(device, 'colorMode', colorMode)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states:
 					# White Level (set to 100 at all times for Ambiance bulbs).
@@ -5644,7 +5841,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				# Unrecognized on state, but not important enough to mention in regular log.
 				self.debugLog(u"Ambiance light unrecognized \"on\" state given by hub: " + unicode(bulb['state']['on']))
-			
+
 			# Update the effect state (regardless of onState).
 			self.updateDeviceState(device, 'effect', effect)
 
@@ -5665,7 +5862,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						# Hue Device is off.  Set Attribute Controller device brightness level to 0.
 						self.updateDeviceState(controlDevice, 'brightnessLevel', 0)
-						
+
 		# -- LightStrips --
 		elif modelId in kLightStripsDeviceIDs:
 			#   Value assignment.  (Using the get() method to avoid KeyErrors).
@@ -5681,7 +5878,7 @@ class Plugin(indigo.PluginBase):
 				colorTemp = bulb['state'].get('ct', 0)
 			colorMode = bulb['state'].get('colormode', "ct")
 			effect = bulb['state'].get('effect', "none")
-	
+
 			#   Value manipulation.
 			# Convert from HSB to RGB, scaling the hue and saturation values appropriately.
 			hsb = HSVColor(hue / 182.0, saturation / 255.0, brightness / 255.0)
@@ -5726,7 +5923,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', colorRed)
 				self.updateDeviceState(device, 'colorGreen', colorGreen)
 				self.updateDeviceState(device, 'colorBlue', colorBlue)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states or "redLevel" in device.states:
 					# For everything but the original LightStrip...
@@ -5763,7 +5960,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', 0)
 				self.updateDeviceState(device, 'colorGreen', 0)
 				self.updateDeviceState(device, 'colorBlue', 0)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "whiteLevel" in device.states or "redLevel" in device.states:
 					# For everything but the original LightStrip...
@@ -5779,7 +5976,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				# Unrecognized on state, but not important enough to mention in regular log.
 				self.debugLog(u"LightStrip unrecognized on state given by hub: " + unicode(bulb['state']['on']))
-			
+
 			# Update the effect state (regardless of onState).
 			self.updateDeviceState(device, 'effect', effect)
 
@@ -5814,7 +6011,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						# Hue Device is off.  Set Attribute Controller device brightness level to 0.
 						self.updateDeviceState(controlDevice, 'brightnessLevel', 0)
-		
+
 		# -- LivingColors --
 		elif modelId in kLivingColorsDeviceIDs:
 			#   Value assignment.
@@ -5827,7 +6024,7 @@ class Plugin(indigo.PluginBase):
 			colorBlue = 255		# Initialize for later
 			colorMode = bulb['state'].get('colormode', "xy")
 			effect = bulb['state'].get('effect', "none")
-			
+
 			#   Value manipulation.
 			# Convert from HSB to RGB, scaling the hue and saturation values appropriately.
 			hsb = HSVColor(hue / 182.0, saturation / 255.0, brightness / 255.0)
@@ -5860,14 +6057,14 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', colorRed)
 				self.updateDeviceState(device, 'colorGreen', colorGreen)
 				self.updateDeviceState(device, 'colorBlue', colorBlue)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "redLevel" in device.states:
 					# Red, Green, Blue levels (0-100).
 					self.updateDeviceState(device, 'redLevel', int(round(colorRed / 255.0 * 100.0)))
 					self.updateDeviceState(device, 'greenLevel', int(round(colorGreen / 255.0 * 100.0)))
 					self.updateDeviceState(device, 'blueLevel', int(round(colorBlue / 255.0 * 100.0)))
-			
+
 			elif onState == False:
 				# Hue device is off. Set brightness to zero.
 				if device.states['brightnessLevel'] != 0:
@@ -5888,7 +6085,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'colorRed', 0)
 				self.updateDeviceState(device, 'colorGreen', 0)
 				self.updateDeviceState(device, 'colorBlue', 0)
-				
+
 				### Update inherited states for Indigo 7+ devices.
 				if "redLevel" in device.states:
 					# Red, Green, Blue levels (0-100).
@@ -5901,7 +6098,7 @@ class Plugin(indigo.PluginBase):
 
 			# Update the effect state (regardless of onState).
 			self.updateDeviceState(device, 'effect', effect)
-			
+
 			# Update any Hue Device Attribute Controller virtual dimmers associated with this bulb.
 			for controlDeviceId in self.controlDeviceList:
 				controlDevice = indigo.devices[int(controlDeviceId)]
@@ -5930,7 +6127,7 @@ class Plugin(indigo.PluginBase):
 					else:
 						# Hue Device is off.  Set Attribute Controller device brightness level to 0.
 						self.updateDeviceState(controlDevice, 'brightnessLevel', 0)
-						
+
 		# -- LivingWhites --
 		elif modelId in kLivingWhitesDeviceIDs:
 			# Update the Indigo device if the Hue device is on.
@@ -5949,7 +6146,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				# Unrecognized on state, but not important enough to mention in regular log.
 				self.debugLog(u"LivingWhites unrecognized on state given by hub: " + unicode(bulb['state']['on']))
-				
+
 			# Update any Hue Device Attribute Controller virtual dimmers associated with this bulb.
 			for controlDeviceId in self.controlDeviceList:
 				controlDevice = indigo.devices[int(controlDeviceId)]
@@ -5978,14 +6175,14 @@ class Plugin(indigo.PluginBase):
 					else:
 						# Hue Device is off.  Set Attribute Controller device brightness level to 0.
 						self.updateDeviceState(controlDevice, 'brightnessLevel', 0)
-						
+
 		else:
 			# Unrecognized model ID.
 			if not self.unsupportedDeviceWarned:
 				errorText = u"The \"" + device.name + u"\" device has an unrecognized model ID of \"" + bulb.get('modelid', "") + u"\". Hue Lights plugin does not support this device."
 				self.errorLog(errorText)
 				# Remember the error.
-				self.lastErrorMessage = errorText 
+				self.lastErrorMessage = errorText
 				self.unsupportedDeviceWarned = True
 		# End of model ID matching if/then test.
 
@@ -5994,13 +6191,13 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def parseAllHueGroupsData(self):
 		self.debugLog(u"Starting parseAllHueGroupsData.")
-		
+
 		# Itterate through all the Indigo devices and look for Hue group changes in the
 		#   self.groupsDict that changed, then update the Indigo device states and properties
 		#   as needed.  This method does no actual Hue hub communication.  It just updates
 		#   Indigo devices with information already obtained through the use of the
 		#   self.updateGroupsList.
-		
+
 		## self.debugLog(u"parseAllHueGroupsData: There are %i groups on the Hue bridge and %i Indigo devices controlling Hue lights and groups." % (len(self.groupsDict), len(self.deviceList)))
 		# Start going through all the devices in the self.deviceList and update any Indigo
 		#   devices that are controlling the Hue group devices.
@@ -6011,7 +6208,7 @@ class Plugin(indigo.PluginBase):
 			# If this Indigo device is for a Hue Group...
 			if device.deviceTypeId in kGroupDeviceTypeIDs:
 				## self.debugLog(u"parseAllHueGroupsData: Indigo device \"%s\" is for a Hue group. Proceeing." % (device.name))
-				
+
 				# Go through each Hue group device and see if it is controlled by this Indigo device.
 				for groupId in self.groupsDict:
 					# Grab the entire set of group data from the groupsDict first.
@@ -6028,7 +6225,7 @@ class Plugin(indigo.PluginBase):
 				# End loop through self.groupsDict.
 			# End check if this is a Hue Group device.
 		# End loop through self.deviceList.
-		
+
 	# Parse One Hue Group Data
 	########################################
 	def parseOneHueGroupData(self, group, device):
@@ -6036,9 +6233,9 @@ class Plugin(indigo.PluginBase):
 
 		# Take the groupId and device passed to this method, look up the data already obtained from the Hue hub
 		# and parse the hub data for this group, making changes to the Indigo device as needed.
-		
+
 		deviceId = device.id
-		
+
 		# Separate out the specific Hue group data.
 		nameOnHub = group.get('name', "")
 		groupType = group.get('type', "")
@@ -6101,8 +6298,8 @@ class Plugin(indigo.PluginBase):
 			colorTemp = int(round(1000000.0/colorTemp))
 		else:
 			colorTemp = 0
-			
-		#   Update Indigo states and properties common to all Hue devices.	
+
+		#   Update Indigo states and properties common to all Hue devices.
 		tempProps = device.pluginProps
 		# Update the Hue group name.
 		if nameOnHub != tempProps.get('nameOnHub', False):
@@ -6126,7 +6323,7 @@ class Plugin(indigo.PluginBase):
 		self.updateDeviceState(device, 'effect', effect)
 		# Update the group member IDs.
 		self.updateDeviceState(device, 'groupMemberIDs', groupMemberIDs)
-		
+
 		# Update the Indigo device if the Hue group is on.
 		if onState == True:
 			# Update the brightness level if it's different.
@@ -6149,7 +6346,7 @@ class Plugin(indigo.PluginBase):
 			self.updateDeviceState(device, 'colorRed', colorRed)
 			self.updateDeviceState(device, 'colorGreen', colorGreen)
 			self.updateDeviceState(device, 'colorBlue', colorBlue)
-			
+
 			### Update inherited states for Indigo 7+ devices.
 			if "whiteLevel" in device.states or "redLevel" in device.states:
 				# White Level (negative saturation, 0-100).
@@ -6160,7 +6357,7 @@ class Plugin(indigo.PluginBase):
 				self.updateDeviceState(device, 'redLevel', int(round(colorRed / 255.0 * 100.0)))
 				self.updateDeviceState(device, 'greenLevel', int(round(colorGreen / 255.0 * 100.0)))
 				self.updateDeviceState(device, 'blueLevel', int(round(colorBlue / 255.0 * 100.0)))
-		
+
 		elif onState == False:
 			# Hue group is off. Set brightness to zero.
 			if device.states['brightnessLevel'] != 0:
@@ -6201,7 +6398,7 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Unrecognized on state, but not important enough to mention in regular log.
 			self.debugLog(u"Hue group unrecognized on state given by hub: " + unicode(group['action']['on']))
-			
+
 		# Update any Hue Device Attribute Controller virtual dimmers associated with this group.
 		for controlDeviceId in self.controlDeviceList:
 			controlDevice = indigo.devices[int(controlDeviceId)]
@@ -6236,13 +6433,13 @@ class Plugin(indigo.PluginBase):
 				# End if device onState is True.
 			# End if this device is an the current attribute controller device.
 		# End loop through attribute controller device list.
-		
+
 	# Parse All Hue Users (User Device) Data
 	########################################
 	def parseAllHueUsersData(self):
 		self.debugLog(u"Starting parseAllHueUsersData.")
 		# Soon to be filled in.
-	
+
 	# Parse All Hue Scenes Data
 	########################################
 	def parseAllHueScenesData(self):
@@ -6253,20 +6450,60 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def parseAllHueSensorsData(self):
 		self.debugLog(u"Starting parseAllHueSensorsData.")
-		
+
 		# Itterate through all the Indigo devices and look for Hue sensor changes in the
 		#   self.sensorsDict that changed, then update the Indigo device states and properties
 		#   as needed.  This method does no actual Hue hub communication.  It just updates
 		#   Indigo devices with information already obtained through the use of the
 		#   self.updateSensorsList.
-		
+
 		## self.debugLog(u"parseAllHueSensorsData: There are %i sensors on the Hue bridge and %i Indigo devices controlling Hue devices." % (len(self.sensorsDict), len(self.deviceList)))
 		# Start going through all the devices in the self.deviceList and update any Indigo
 		#   devices that are controlling the Hue sensors devices.
 		for deviceId in self.deviceList:
 			device = indigo.devices[deviceId]
 			## self.debugLog(u"parseAllHueSensorsData: Looking at Indigo device \"%s\"." % (device.name))
-		
+
+
+
+
+			# -- deconz on/off Sensor --
+			if device.deviceTypeId == "deconzOnOffSensor":
+				## self.debugLog(u"parseAlldeconzSensorsData: Indigo device \"%s\" is for a deconz on/off Sensor (Motion) sensor. Proceeing." % (device.name))
+				# Go through each deconz sensor device and see if it is controlled by this Indigo device.
+				for sensorId in self.sensorsDict:
+					sensor = self.sensorsDict[sensorId]
+					## self.debugLog(u"parseAlldeconzSensorsData: Parsing deconz sensor ID %s (\"%s\")." % (sensorId, sensor.get('name', "no name")))
+					# Is this deconz sensor ID the one associated with this Indigo device?
+					if sensorId == device.pluginProps['sensorId']:
+						## self.debugLog(u"parseAlldeconzSensorsData: Indigo device \"%s\" is controlling deconz sensor ID \"%s\" (\"%s\"). Updating Indigo device properties and states." % (device.name, sensorId, sensor.get('name', "no name")))
+
+						# It is, so call the method that assigns sensor data to the Indigo device.
+						self.parseOneHueSensorData(sensor, device)
+
+					# End check if this deconz Sensor device is the one associated with the Indigo device.
+				# End loop through self.sensorsDict.
+			# End check if this is a deconz Motion Sensor (Motion) device.
+
+			# -- deconz Cube Sensor --
+			if device.deviceTypeId == "deconzCubeSensor":
+				## self.debugLog(u"parseAlldeconzSensorsData: Indigo device \"%s\" is for a deconz on/off Sensor (Motion) sensor. Proceeing." % (device.name))
+				# Go through each deconz sensor device and see if it is controlled by this Indigo device.
+				for sensorId in self.sensorsDict:
+					sensor = self.sensorsDict[sensorId]
+					## self.debugLog(u"parseAlldeconzSensorsData: Parsing deconz sensor ID %s (\"%s\")." % (sensorId, sensor.get('name', "no name")))
+					# Is this deconz sensor ID the one associated with this Indigo device?
+					if sensorId == device.pluginProps['sensorId']:
+						## self.debugLog(u"parseAlldeconzSensorsData: Indigo device \"%s\" is controlling deconz sensor ID \"%s\" (\"%s\"). Updating Indigo device properties and states." % (device.name, sensorId, sensor.get('name', "no name")))
+
+						# It is, so call the method that assigns sensor data to the Indigo device.
+						self.parseOneHueSensorData(sensor, device)
+
+					# End check if this deconz Sensor device is the one associated with the Indigo device.
+				# End loop through self.sensorsDict.
+			# End check if this is a deconz Motion Sensor (Motion) device.
+
+
 			# -- Hue Motion Sensor (Motion) --
 			if device.deviceTypeId == "hueMotionSensor":
 				## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is for a Hue Motion Sensor (Motion) sensor. Proceeing." % (device.name))
@@ -6277,14 +6514,14 @@ class Plugin(indigo.PluginBase):
 					# Is this Hue sensor ID the one associated with this Indigo device?
 					if sensorId == device.pluginProps['sensorId']:
 						## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is controlling Hue sensor ID \"%s\" (\"%s\"). Updating Indigo device properties and states." % (device.name, sensorId, sensor.get('name', "no name")))
-						
+
 						# It is, so call the method that assigns sensor data to the Indigo device.
 						self.parseOneHueSensorData(sensor, device)
-						
+
 					# End check if this Hue Sensor device is the one associated with the Indigo device.
 				# End loop through self.sensorsDict.
 			# End check if this is a Hue Motion Sensor (Motion) device.
-			
+
 			# -- Hue Motion Sensor (Temperature) --
 			if device.deviceTypeId == "hueMotionTemperatureSensor":
 				## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is for a Hue Motion Sensor (Temperature) sensor. Proceeing." % (device.name))
@@ -6295,14 +6532,14 @@ class Plugin(indigo.PluginBase):
 					# Is this Hue sensor ID the one associated with this Indigo device?
 					if sensorId == device.pluginProps['sensorId']:
 						## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is controlling Hue sensor ID \"%s\" (\"%s\"). Updating Indigo device properties and states." % (device.name, sensorId, sensor.get('name', "no name")))
-						
+
 						# It is, so call the method that assigns sensor data to the Indigo device.
 						self.parseOneHueSensorData(sensor, device)
-						
+
 					# End check if this Hue Sensor device is the one associated with the Indigo device.
 				# End loop through self.sensorsDict.
 			# End check if this is a Hue Motion Sensor (Temperature) device.
-			
+
 			# -- Hue Motion Sensor (Luninance) --
 			if device.deviceTypeId == "hueMotionLightSensor":
 				## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is for a Hue Motion Sensor (Luminance) sensor. Proceeing." % (device.name))
@@ -6313,10 +6550,10 @@ class Plugin(indigo.PluginBase):
 					# Is this Hue sensor ID the one associated with this Indigo device?
 					if sensorId == device.pluginProps['sensorId']:
 						## self.debugLog(u"parseAllHueSensorsData: Indigo device \"%s\" is controlling Hue sensor ID \"%s\" (\"%s\"). Updating Indigo device properties and states." % (device.name, sensorId, sensor.get('name', "no name")))
-						
+
 						# It is, so call the method that assigns sensor data to the Indigo device.
 						self.parseOneHueSensorData(sensor, device)
-						
+
 					# End check if this Hue Sensor device is the one associated with the Indigo device.
 				# End loop through self.sensorsDict.
 			# End check if this is a Hue Motion Sensor (Luminance) device.
@@ -6327,10 +6564,149 @@ class Plugin(indigo.PluginBase):
 	def parseOneHueSensorData(self, sensor, device):
 		## self.debugLog(u"Starting parseOneHueSensorData.")
 
+
+
+
+
+		# -- deconz Motion Sensor (on/off) --
+		if device.deviceTypeId == "deconzOnOffSensor":
+			## self.debugLog(u"parseOneHueSensorData: Parsing deconz sensor ID %s (\"%s\")." % (device.pluginProps.get('sensorId', ""), sensor.get('name', "no name")))
+
+			# Separate out the specific deconz sensor data.
+			nameOnHub = sensor.get('name', "")
+			uniqueId = sensor.get('uniqueid', "")
+			productId = sensor.get('productid', "")
+			swVersion = sensor.get('swversion', "")
+			manufacturerName = sensor.get('manufacturername', "")
+			sensorType = sensor.get('type', "")
+			modelId = sensor.get('modelid', "")
+			enabledOnHub = sensor['config'].get('on', True)
+			batteryLevel = sensor['config'].get('battery', 0)
+			sensitivity = sensor['config'].get('sensitivity', 0)
+			sensitivityMax = sensor['config'].get('sensitivitymax', 0)
+			testMode = sensor['config'].get('usertest', False)
+			ledEnabled = sensor['config'].get('ledindication', False)
+			alert = sensor['config'].get('alert', "none")
+			online = sensor['config'].get('reachable', False)
+			onStateBool = sensor['state'].get('open', False)
+			# Convert True/False onState to on/off values.
+			if onStateBool:
+				onState = "on"
+				sensorIcon = indigo.kStateImageSel.MotionSensorTripped
+			else:
+				onState = "off"
+				sensorIcon = indigo.kStateImageSel.MotionSensor
+			lastUpdated = sensor['state'].get('lastupdated', "")
+
+			#   Update Indigo states and properties.
+			tempProps = device.pluginProps
+			# Update the device properties.
+			tempProps['nameOnHub'] = nameOnHub
+			tempProps['uniqueId'] = uniqueId
+			tempProps['productId'] = productId
+			tempProps['swVersion'] = swVersion
+			tempProps['manufacturerName'] = manufacturerName
+			tempProps['type'] = sensorType
+			tempProps['modelId'] = modelId
+			tempProps['enabledOnHub'] = enabledOnHub
+			self.updateDeviceProps(device, tempProps)
+
+			# Update the states on the device.
+			self.updateDeviceState(device, 'alertMode', alert)
+			self.updateDeviceState(device, 'sensitivity', sensitivity)
+			self.updateDeviceState(device, 'sensitivityMax', sensitivityMax)
+			self.updateDeviceState(device, 'online', online)
+			self.updateDeviceState(device, 'testMode', testMode)
+			self.updateDeviceState(device, 'ledEnabled', ledEnabled)
+			self.updateDeviceState(device, 'lastUpdated', lastUpdated)
+			self.updateDeviceState(device, 'batteryLevel', batteryLevel)
+			# Log any change to the onState.
+			if onStateBool != device.onState:
+				indigo.server.log(u"received \"" + device.name + u"\" status update is " + onState, 'hue Lights')
+			# Update the device state.  Passing device object, state name, state value, decimal precision, display value, icon selection.
+			self.updateDeviceState(device, 'onOffState', onStateBool, 0, onState, sensorIcon)
+		# End if this is a deconz motion sensor.
+
+
+		# -- deconz cube Sensor (on/off) --
+		if device.deviceTypeId == "deconzCubeSensor":
+			## self.debugLog(u"parseOneHueSensorData: Parsing deconz sensor ID %s (\"%s\")." % (device.pluginProps.get('sensorId', ""), sensor.get('name', "no name")))
+
+			# Separate out the specific deconz sensor data.
+			nameOnHub = sensor.get('name', "")
+			uniqueId = sensor.get('uniqueid', "")
+			productId = sensor.get('productid', "")
+			swVersion = sensor.get('swversion', "")
+			manufacturerName = sensor.get('manufacturername', "")
+			sensorType = sensor.get('type', "")
+			modelId = sensor.get('modelid', "")
+			enabledOnHub = sensor['config'].get('on', True)
+			batteryLevel = sensor['config'].get('battery', 0)
+			testMode = sensor['config'].get('usertest', False)
+			ledEnabled = sensor['config'].get('ledindication', False)
+			alert = sensor['config'].get('alert', "none")
+			online = sensor['config'].get('reachable', False)
+			temperatureRaw = sensor['state'].get('buttonevent', 0)
+			lastUpdated = sensor['state'].get('lastupdated', "")
+
+			#   Update Indigo properties and states.
+			tempProps = device.pluginProps
+			# Update the device properties.
+			tempProps['nameOnHub'] = nameOnHub
+			tempProps['uniqueId'] = uniqueId
+			tempProps['productId'] = productId
+			tempProps['swVersion'] = swVersion
+			tempProps['manufacturerName'] = manufacturerName
+			tempProps['type'] = sensorType
+			tempProps['modelId'] = modelId
+			tempProps['enabledOnHub'] = enabledOnHub
+			self.updateDeviceProps(device, tempProps)
+
+
+			sensorValue = temperatureRaw
+			if temperatureRaw == 7000:
+				sensorName = 'Wakeup'
+			else:
+				sensorName = 'Unknown'
+
+			sensorUiValue = unicode(sensorValue)
+			sensorIcon = indigo.kStateImageSel.TemperatureSensor
+			sensorPrecision = 0
+
+			# Update the states on the device.
+#			self.updateDeviceState(device, 'alertMode', alert)
+#			self.updateDeviceState(device, 'sensitivity', sensitivity)
+#			self.updateDeviceState(device, 'sensitivityMax', sensitivityMax)
+#			self.updateDeviceState(device, 'online', online)
+#			self.updateDeviceState(device, 'testMode', testMode)
+#			self.updateDeviceState(device, 'ledEnabled', ledEnabled)
+			self.updateDeviceState(device, 'lastUpdated', lastUpdated)
+			self.updateDeviceState(device, 'batteryLevel', batteryLevel)
+			self.updateDeviceState(device, 'sensorName', sensorName)
+
+
+
+
+			# Log any change to the sensorValue.
+			if sensorValue != device.sensorValue:
+				indigo.server.log(u"received \"" + device.name + u"\" sensor update to " + sensorUiValue, 'Hue Lights')
+			self.updateDeviceState(device, 'sensorValue', sensorValue, sensorPrecision, sensorUiValue, sensorIcon)
+		# End if this is a Decon Cube sensor.
+
+
+
+
+
+
+
+
+
+
+
 		# -- Hue Motion Sensor (Motion) --
 		if device.deviceTypeId == "hueMotionSensor":
 			## self.debugLog(u"parseOneHueSensorData: Parsing Hue sensor ID %s (\"%s\")." % (device.pluginProps.get('sensorId', ""), sensor.get('name', "no name")))
-			
+
 			# Separate out the specific Hue sensor data.
 			nameOnHub = sensor.get('name', "")
 			uniqueId = sensor.get('uniqueid', "")
@@ -6356,7 +6732,7 @@ class Plugin(indigo.PluginBase):
 				onState = "off"
 				sensorIcon = indigo.kStateImageSel.MotionSensor
 			lastUpdated = sensor['state'].get('lastupdated', "")
-			
+
 			#   Update Indigo states and properties.
 			tempProps = device.pluginProps
 			# Update the device properties.
@@ -6369,7 +6745,7 @@ class Plugin(indigo.PluginBase):
 			tempProps['modelId'] = modelId
 			tempProps['enabledOnHub'] = enabledOnHub
 			self.updateDeviceProps(device, tempProps)
-			
+
 			# Update the states on the device.
 			self.updateDeviceState(device, 'alertMode', alert)
 			self.updateDeviceState(device, 'sensitivity', sensitivity)
@@ -6385,11 +6761,11 @@ class Plugin(indigo.PluginBase):
 			# Update the device state.  Passing device object, state name, state value, decimal precision, display value, icon selection.
 			self.updateDeviceState(device, 'onOffState', onStateBool, 0, onState, sensorIcon)
 		# End if this is a Hue motion sensor.
-		
+
 		# -- Hue Motion Sensor (Temperature) --
 		if device.deviceTypeId == "hueMotionTemperatureSensor":
 			## self.debugLog(u"parseOneHueSensorData: Parsing Hue sensor ID %s (\"%s\")." % (device.pluginProps.get('sensorId', ""), sensor.get('name', "no name")))
-			
+
 			# Separate out the specific Hue sensor data.
 			# Get the name of the sensor as it appears on the Hue hub.
 			nameOnHub = sensor.get('name', "")
@@ -6407,7 +6783,7 @@ class Plugin(indigo.PluginBase):
 			online = sensor['config'].get('reachable', False)
 			temperatureRaw = sensor['state'].get('temperature', 0)
 			lastUpdated = sensor['state'].get('lastupdated', "")
-			
+
 			#   Update Indigo properties and states.
 			tempProps = device.pluginProps
 			# Update the device properties.
@@ -6420,7 +6796,7 @@ class Plugin(indigo.PluginBase):
 			tempProps['modelId'] = modelId
 			tempProps['enabledOnHub'] = enabledOnHub
 			self.updateDeviceProps(device, tempProps)
-			
+
 			# Get the calibration offset specified in the device settings.
 			sensorOffset = device.pluginProps.get('sensorOffset', 0)
 			try:
@@ -6448,7 +6824,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				sensorValue = temperatureC
 				sensorUiValue = unicode(sensorValue) + u" \xbaC"
-			
+
 			sensorIcon = indigo.kStateImageSel.TemperatureSensor
 			sensorPrecision = 1
 
@@ -6470,7 +6846,7 @@ class Plugin(indigo.PluginBase):
 		# -- Hue Motion Sensor (Luninance) --
 		if device.deviceTypeId == "hueMotionLightSensor":
 			## self.debugLog(u"parseOneHueSensorData: Parsing Hue sensor ID %s (\"%s\")." % (device.pluginProps.get('sensorId', ""), sensor.get('name', "no name")))
-			
+
 			# Separate out the specific Hue sensor data.
 			# Get the name of the sensor as it appears on the Hue hub.
 			nameOnHub = sensor.get('name', "")
@@ -6492,7 +6868,7 @@ class Plugin(indigo.PluginBase):
 			daylight = sensor['state'].get('daylight', False)
 			darkThreshold = sensor['config'].get('tholddark', 0)
 			thresholdOffset = sensor['config'].get('tholdoffset', 0)
-			
+
 			#   Update Indigo properties and states.
 			tempProps = device.pluginProps
 			# Update the device properties.
@@ -6505,7 +6881,7 @@ class Plugin(indigo.PluginBase):
 			tempProps['modelId'] = modelId
 			tempProps['enabledOnHub'] = enabledOnHub
 			self.updateDeviceProps(device, tempProps)
-			
+
 			# Convert raw luminance reading to lux.
 			try:
 				luminance = pow(10.0, (luminanceRaw - 1.0) / 10000.0)
@@ -6519,12 +6895,12 @@ class Plugin(indigo.PluginBase):
 				luminance = 0.0
 				darkThreshold = 0.0
 				thresholdOffset = 0.0
-			
+
 			# If the luminanceRaw value is 0, that means the light level is blow
 			# detectable levels, which should be reported as a light level of 0 lux.
 			if luminanceRaw == 0:
 				luminance = 0.0
-				
+
 			# Determine to how many decimal places the sensor value should be
 			# rounded based on how much luminance there is.
 			if 0 < luminance and luminance < 10:
@@ -6539,7 +6915,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				sensorValue = int(round(luminance, 0))
 			sensorUiValue = unicode(sensorValue) + u" lux"
-			
+
 			# Now do the same for the darkThreshold and thresholdOffset values.
 			if 0 < darkThreshold and darkThreshold < 10:
 				thresholdPrecision = 2
@@ -6588,14 +6964,14 @@ class Plugin(indigo.PluginBase):
 				indigo.server.log(u"received \"" + device.name + u"\" sensor update to " + sensorUiValue, 'Hue Lights')
 			self.updateDeviceState(device, 'sensorValue', sensorValue, sensorPrecision, sensorUiValue, sensorIcon)
 		# End if this is a Hue luminance sensor.
-		
+
 
 	# Turn Device On or Off
 	########################################
 	def doOnOff(self, device, onState, rampRate=-1):
 		# onState:		Boolean on state.  True = on. False = off.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds).
@@ -6620,7 +6996,7 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Convert the passed rampRate from seconds to 1/10th-seconds.
 			rampRate = int(round(float(rampRate) * 10))
-		
+
 		# Get the current brightness. Range is 0-100.
 		currentBrightness = int(device.states['brightnessLevel'])
 		# Get the bulb's saved brightness (if it exists). Range is 1-255.
@@ -6646,7 +7022,7 @@ class Plugin(indigo.PluginBase):
 		# If the currentBrightness is less than 100% and is the same as the savedBrightness, go to 100%
 		if currentBrightness < 100 and currentBrightness == int(round(savedBrightness / 255.0 * 100.0)):
 			savedBrightness = 255
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -6655,7 +7031,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -6675,7 +7051,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# If the requested onState is True (on), then use the
 		#   saved brightness level (which was determined above).
 		if onState == True:
@@ -6754,14 +7130,14 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log(u"\"" + device.name + u"\" off at ramp rate " + unicode(rampRate / 10.0) + u" sec.", 'Sent Hue Lights')
 			# Update the Indigo device.
 			self.updateDeviceState(device, 'brightnessLevel', 0)
-	
+
 	# Set Brightness
 	########################################
 	def doBrightness(self, device, brightness, rampRate=-1, showLog=True):
 		# brightness:	Integer from 0 to 255.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
 		# showLog:		Optional boolean. False = hide change from Indigo log.
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds.
@@ -6785,7 +7161,7 @@ class Plugin(indigo.PluginBase):
 				rampRate = 5
 		else:
 			rampRate = int(round(float(rampRate) * 10))
-		
+
 		# Get the current brightness level.
 		currentBrightness = device.states.get('brightnessLevel', 100)
 
@@ -6797,7 +7173,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -6817,7 +7193,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# If requested brightness is greater than 0, proceed. Otherwise, turn off the bulb.
 		if brightness > 0:
 			requestData = json.dumps({"bri": int(brightness), "on": True, "transitiontime": rampRate})
@@ -6894,7 +7270,7 @@ class Plugin(indigo.PluginBase):
 				indigo.server.log(u"\"" + device.name + u"\" off at ramp rate " + unicode(rampRate / 10.0) + u" sec.", 'Sent Hue Lights')
 			# Update the device brightness (which automatically changes on state).
 			self.updateDeviceState(device, 'brightnessLevel', 0)
-	
+
 	# Set RGB Levels
 	########################################
 	def doRGB(self, device, red, green, blue, rampRate=-1):
@@ -6903,10 +7279,10 @@ class Plugin(indigo.PluginBase):
 		# green:		Integer from 0 to 255.
 		# blue:			Integer from 0 to 255.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
-		
+
 		# Get the model ID of the device.
 		modelId = device.pluginProps.get('modelId', "")
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds.
@@ -6930,10 +7306,10 @@ class Plugin(indigo.PluginBase):
 				rampRate = 5
 		else:
 			rampRate = int(round(float(rampRate) * 10))
-		
+
 		# Get the current brightness.
 		currentBrightness = device.states.get('brightnessLevel', 100)
-		
+
 		# Convert RGB to HSL (same as HSB)
 		rgb = RGBColor(red, green, blue, rgb_type='wide_gamut_rgb')
 		hsb = rgb.convert_to('hsv')
@@ -6941,7 +7317,7 @@ class Plugin(indigo.PluginBase):
 		hue = int(round(hsb.hsv_h * 182.0))
 		saturation = int(round(hsb.hsv_s * 255.0))
 		brightness = int(round(hsb.hsv_v * 255.0))
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -6950,7 +7326,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -6970,7 +7346,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Make sure the device is capable of rendering color.
 		if modelId not in kHueBulbDeviceIDs and modelId not in kLightStripsDeviceIDs and modelId not in kLivingColorsDeviceIDs and device.deviceTypeId != "hueGroup":
 			errorText = u"Cannot set RGB values. The \"%s\" device does not support color." % (device.name)
@@ -6978,7 +7354,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# Send to Hue (Create JSON request based on whether brightness is zero or not).
 		if brightness > 0:
 			requestData = json.dumps({"bri": brightness, "colormode": 'hs', "hue": hue, "sat": saturation, "transitiontime": int(rampRate), "on": True})
@@ -6991,7 +7367,7 @@ class Plugin(indigo.PluginBase):
 			#   We also explicity state the X and Y values (equivilant to RGB of 1, 1, 1)
 			#   because the xyy object contains invalid "NaN" values when all RGB values are 0.
 			requestData = json.dumps({"bri": 0, "colormode": 'hs', "hue": 0, "sat": 0, "transitiontime": int(rampRate), "on": False})
-			
+
 		# Create the HTTP command and send it to the hub.
 		# Create the command based on whether this is a light or group device.
 		if device.deviceTypeId == "hueGroup":
@@ -7018,7 +7394,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Update on Indigo
 		if brightness > 0:
 			# Convert brightness to a percentage.
@@ -7041,7 +7417,7 @@ class Plugin(indigo.PluginBase):
 		#   gamut and when the Hue hub updates the HSB values to reflect
 		#   actual displayed light, the interpreted RGB values will not
 		#   match the values entered by the user in the Action dialog.
-		
+
 	# Set Hue, Saturation and Brightness
 	########################################
 	def doHSB(self, device, hue, saturation, brightness, rampRate=-1):
@@ -7049,7 +7425,7 @@ class Plugin(indigo.PluginBase):
 		# saturation:	Integer from 0 to 255.
 		# brightness:	Integer from 0 to 255.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds.
@@ -7073,10 +7449,10 @@ class Plugin(indigo.PluginBase):
 				rampRate = 5
 		else:
 			rampRate = int(round(float(rampRate) * 10.0))
-		
+
 		# Get the current brightness level.
 		currentBrightness = device.states.get('brightnessLevel', 100)
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7085,7 +7461,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -7105,7 +7481,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Make sure this device supports color.
 		modelId = device.pluginProps.get('modelId', "")
 		if modelId in kLivingWhitesDeviceIDs:
@@ -7114,18 +7490,18 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# If the current brightness is below 6% and the requested brightness is
 		#   greater than 0, set the ramp rate to 0.
 		if currentBrightness < 6 and brightness == 0:
 			rampRate = 0
-		
+
 		# Send to Hue (Create JSON request based on whether brightness is zero or not).
 		if brightness > 0:
 			requestData = json.dumps({"bri":brightness, "colormode": 'hs', "hue":hue, "sat":saturation, "on":True, "transitiontime":rampRate})
 		else:
 			requestData = json.dumps({"bri":brightness, "colormode": 'hs', "hue":hue, "sat":saturation, "on":False, "transitiontime":rampRate})
-			
+
 		# Create the command based on whether this is a light or group device.
 		if device.deviceTypeId == "hueGroup":
 			command = "http://%s/api/%s/groups/%s/action" % (self.ipAddress, self.hostId, groupId)
@@ -7151,7 +7527,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Update on Indigo
 		if int(round(brightness/255.0*100.0)) > 0:
 			# Log the change.
@@ -7175,7 +7551,7 @@ class Plugin(indigo.PluginBase):
 		# colorY:		Integer from 0 to 1.0.
 		# brightness:	Integer from 0 to 255.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds.
@@ -7199,10 +7575,10 @@ class Plugin(indigo.PluginBase):
 				rampRate = 5
 		else:
 			rampRate = int(round(float(rampRate) * 10.0))
-		
+
 		# Get the current brightness level.
 		currentBrightness = device.states.get('brightnessLevel', 100)
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7211,7 +7587,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -7231,7 +7607,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Make sure this device supports color.
 		modelId = device.pluginProps.get('modelId', "")
 		if modelId in kLivingWhitesDeviceIDs:
@@ -7240,7 +7616,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# Make sure the X and Y values are sane.
 		if colorX < 0.0 or colorX > 1.0:
 			errorText = u"The specified X chromatisety value \"%s\" for the \"%s\" device is outside the acceptable range of 0.0 to 1.0." % (colorX, device.name)
@@ -7254,18 +7630,18 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# If the current brightness is below 6% and the requested brightness is
 		#   greater than 0, set the ramp rate to 0.
 		if currentBrightness < 6 and brightness == 0:
 			rampRate = 0
-		
+
 		# Send to Hue (Create JSON request based on whether brightness is zero or not).
 		if brightness > 0:
 			requestData = json.dumps({"bri":brightness, "colormode": 'xy', "xy":[colorX, colorY], "on":True, "transitiontime":rampRate})
 		else:
 			requestData = json.dumps({"bri":brightness, "colormode": 'xy', "xy":[colorX, colorY], "on":False, "transitiontime":rampRate})
-			
+
 		# Create the command based on whether this is a light or group device.
 		if device.deviceTypeId == "hueGroup":
 			command = "http://%s/api/%s/groups/%s/action" % (self.ipAddress, self.hostId, groupId)
@@ -7291,7 +7667,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Update on Indigo
 		if int(round(brightness/255.0*100.0)) > 0:
 			# Log the change.
@@ -7314,7 +7690,7 @@ class Plugin(indigo.PluginBase):
 		# temperature:	Integer from 2000 to 6500.
 		# brightness:	Integer from 0 to 255.
 		# rampRate:		Optional float from 0 to 540.0 (higher values will probably work too).
-		
+
 		# If a rampRate wasn't specified (default of -1 assigned), use the default.
 		#   (rampRate should be a float expressing transition time in seconds. Precission
 		#   is limited to one-tenth seconds.
@@ -7338,7 +7714,7 @@ class Plugin(indigo.PluginBase):
 				rampRate = 5
 		else:
 			rampRate = int(round(float(rampRate) * 10))
-		
+
 		# Make sure the color temperature value is sane.
 		if temperature < 2000 or temperature > 6500:
 			errorText = u"Invalid color temperature value of %i. Color temperatures must be between 2000 and 6500 K." % temperature
@@ -7346,18 +7722,18 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Get the current brightness level.
 		currentBrightness = device.states.get('brightnessLevel', 100)
-		
+
 		# Save the submitted color temperature into another variable.
 		colorTemp = temperature
-		
+
 		# Convert temperature from K to mireds.
 		#   Use the ceil and add 3 to help compensate for Hue behavior that "rounds up" to
 		#   the next highest compatible mired value for the device.
 		temperature = int(3 + ceil(1000000.0 / temperature))
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7366,7 +7742,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -7386,7 +7762,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Make sure this device supports color.
 		modelId = device.pluginProps.get('modelId', "")
 		if modelId in kLivingWhitesDeviceIDs:
@@ -7395,18 +7771,18 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# If the current brightness is below 6% and the requested
 		#   brightness is 0, set the ramp rate to 0.
 		if currentBrightness < 6 and brightness == 0:
 			rampRate = 0
-		
+
 		# Send to Hue (Create JSON request based on whether brightness is zero or not).
 		if brightness > 0:
 			requestData = json.dumps({"bri": brightness, "colormode": 'ct', "ct": temperature, "on": True, "transitiontime": int(rampRate)})
 		else:
 			requestData = json.dumps({"bri": brightness, "colormode": 'ct', "ct": temperature, "on": False, "transitiontime": int(rampRate)})
-			
+
 		# Create the command based on whether this is a light or group device.
 		if device.deviceTypeId == "hueGroup":
 			command = "http://%s/api/%s/groups/%s/action" % (self.ipAddress, self.hostId, groupId)
@@ -7432,7 +7808,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Update on Indigo
 		if brightness > 0:
 			# Log the change.
@@ -7451,7 +7827,7 @@ class Plugin(indigo.PluginBase):
 		self.updateDeviceState(device, 'colorMode', "ct")
 		# Update the color temperature state (it's in mireds now, convert to Kelvin).
 		self.updateDeviceState(device, 'colorTemp', colorTemp)
-	
+
 	# Start Alert (Blinking)
 	########################################
 	def doAlert(self, device, alertType="lselect"):
@@ -7459,7 +7835,7 @@ class Plugin(indigo.PluginBase):
 		#					lselect		: Long alert (default if nothing specified)
 		#					select		: Short alert
 		#					none		: Stop any running alerts
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7468,7 +7844,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -7488,7 +7864,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		requestData = json.dumps({"alert": alertType})
 		# Create the command based on whether this is a light or group device.
 		if device.deviceTypeId == "hueGroup":
@@ -7514,7 +7890,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Log the change.
 		if alertType == "select":
 			indigo.server.log(u"\"" + device.name + u"\" start short alert blink.", 'Sent Hue Lights')
@@ -7524,7 +7900,7 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log(u"\"" + device.name + u"\" stop alert blink.", 'Sent Hue Lights')
 		# Update the device state.
 		self.updateDeviceState(device, 'alertMode', alertType)
-			
+
 	# Set Effect Status
 	########################################
 	def doEffect(self, device, effect):
@@ -7532,7 +7908,7 @@ class Plugin(indigo.PluginBase):
 		#					none		: Stop any current effect
 		#					colorloop	: Cycle through all hues at current brightness/saturation.
 		#				Other effects may be supported by Hue with future firmware updates.
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7541,7 +7917,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return False
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -7561,7 +7937,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Submit to Hue
 		requestData = json.dumps({"effect": effect})
 		self.debugLog(u"Request is %s" % requestData)
@@ -7590,24 +7966,24 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 			return
 		self.debugLog(u"Got response - %s" % r.content)
-		
+
 		# Log the change.
 		indigo.server.log(u"\"" + device.name + u"\" set effect to \"" + effect + u"\"", 'Sent Hue Lights')
 		# Update the device state.
 		self.updateDeviceState(device, 'effect', effect)
-	
+
 	# Recall a Hue Scene
 	########################################
 	def doScene(self, groupId="0", sceneId=""):
 		# groupId:		String. Group ID (numeral) on Hue hub on which to apply the scene.
 		# sceneId:		String. Scene ID on Hue hub of scene to be applied to the group.
-		
+
 		# The Hue hub behavior is to apply the scene to all members of the group that are
 		#   also members of the scene.  If a group is selected that has no lights that are
 		#   also part of the scene, nothing will happen when the scene is activated.  The
 		#   build-in Hue group 0 is the set of all Hue lights, so if the scene is applied
 		#   to group 0, all lights that are part of the scene will be affected.
-		
+
 		# Sanity check for an IP address
 		self.ipAddress = self.pluginPrefs.get('address', None)
 		if self.ipAddress is None:
@@ -7616,7 +7992,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Make sure a scene ID was sent.
 		if sceneId == "":
 			errorText = u"No scene selected. Check settings for this action and select a scene to recall."
@@ -7629,22 +8005,22 @@ class Plugin(indigo.PluginBase):
 			sceneName = self.scenesDict[sceneId]['name']
 			sceneOwner = self.scenesDict[sceneId]['owner']
 			userName = self.usersDict[sceneOwner]['name'].replace("#", " app on ")
-		
+
 		# If the group isn't the default group ID 0, get more group info.
 		if groupId != "0":
 			groupName = self.groupsDict[groupId]['name']
 		else:
 			groupName = "all hue lights"
-		
+
 		# Create the JSON object and send the command to the hub.
 		requestData = json.dumps({"scene": sceneId})
 		# Create the command based on whether this is a light or group device.
 		command = "http://%s/api/%s/groups/%s/action" % (self.ipAddress, self.hostId, groupId)
 		self.debugLog("Sending URL request: " + command)
-		
+
 		try:
 			r = requests.put(command, data=requestData, timeout=kTimeout)
-		
+
 		except requests.exceptions.Timeout:
 			errorText = u"Failed to connect to the Hue hub at %s after %i seconds. - Check that the hub is connected and turned on." % (self.ipAddress, kTimeout)
 			# Don't display the error if it's been displayed already.
@@ -7662,10 +8038,10 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 			return
-		
+
 		self.debugLog("Got response - %s" % r.content)
 		indigo.server.log(u"\"" + sceneName + u"\" scene from \"" + userName + u"\" recalled for \"" + groupName + u"\"", 'Hue Lights')
-	
+
 
 
 	# Update Light, Group, Scene and Sensor Lists
@@ -7682,10 +8058,10 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Get the entire configuration from the Hue hub.
 		self.getHueConfig()
-		
+
 		# Now report the results.
 		#
 		# Lights list...
@@ -7693,19 +8069,19 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log(u"Loaded %i light." % len(self.lightsDict))
 		else:
 			indigo.server.log(u"Loaded %i lights." % len(self.lightsDict))
-		
+
 		# Groups list...
 		if len(self.groupsDict) == 1:
 			indigo.server.log(u"Loaded %i group." % len(self.groupsDict))
 		else:
 			indigo.server.log(u"Loaded %i groups." % len(self.groupsDict))
-		
+
 		# User devices list...
 		#if len(self.usersDict) == 1:
 		#	indigo.server.log(u"Loaded %i user device." % len(self.usersDict))
 		#else:
 		#	indigo.server.log(u"Loaded %i user devices." % len(self.usersDict))
-		
+
 		# Scenes list...
 		if len(self.scenesDict) == 1:
 			indigo.server.log(u"Loaded %i scene." % len(self.scenesDict))
@@ -7717,25 +8093,25 @@ class Plugin(indigo.PluginBase):
 		#	indigo.server.log(u"Loaded %i resource link." % len(self.resourcesDict))
 		#else:
 		#	indigo.server.log(u"Loaded %i resource links." % len(self.resourcesDict))
-		
+
 		# Trigger rules list...
 		#if len(self.rulesDict) == 1:
 		#	indigo.server.log(u"Loaded %i trigger rule." % len(self.rulesDict))
 		#else:
 		#	indigo.server.log(u"Loaded %i trigger rules." % len(self.rulesDict))
-		
+
 		# Schedules list...
 		#if len(self.schedulesDict) == 1:
 		#	indigo.server.log(u"Loaded %i schedule." % len(self.schedulesDict))
 		#else:
 		#	indigo.server.log(u"Loaded %i schedules." % len(self.schedulesDict))
-		
+
 		# Sensors list...
 		if len(self.sensorsDict) == 1:
 			indigo.server.log(u"Loaded %i sensor." % len(self.sensorsDict))
 		else:
 			indigo.server.log(u"Loaded %i sensors." % len(self.sensorsDict))
-		
+
 
 
 
@@ -7752,7 +8128,7 @@ class Plugin(indigo.PluginBase):
 		isError = False
 		errorsDict = indigo.Dict()
 		errorsDict['showAlertText'] = ""
-		
+
 		# Validate the IP Address field.
 		if valuesDict.get('address', "") == "":
 			# The field was left blank.
@@ -7760,21 +8136,21 @@ class Plugin(indigo.PluginBase):
 			isError = True
 			errorsDict['address'] = u"The IP Address field is blank. Please enter an IP Address for the Hue hub."
 			errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-		
+
 		else:
 			# The field wasn't blank. Check to see if the format is valid.
 			try:
 				# Try to format the IP Address as a 32-bit binary value. If this fails, the format was invalid.
 				self.debugLog(u"Validating IP address \"%s\"." % valuesDict['address'])
 				socket.inet_aton(valuesDict['address'])
-			
+
 			except socket.error:
 				# IP Address format was invalid.
 				self.debugLog(u"IP address format is invalid.")
 				isError = True
 				errorsDict['address'] = u"The IP Address is not valid. Please enter a valid IP address."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-		
+
 		# If there haven't been any errors so far, try to connect to the Hue hub to see
 		#   if it's actually a Hue hub.
 		if not isError:
@@ -7784,40 +8160,40 @@ class Plugin(indigo.PluginBase):
 				self.debugLog(u"Accessing URL: %s" % command)
 				r = requests.get(command, timeout=kTimeout)
 				self.debugLog(u"Got response:\n%s" % r.content)
-				
+
 				# Quick and dirty check to see if this is a Philips Hue hub.
-				if "Philips hue bridge" not in r.content:
+				if "Philips hue bridge" not in r.content or "Phoscon-GW" not in r.content:
 					# If "Philips hue bridge" doesn't exist in the response, it's not a Hue hub.
 					self.debugLog(u"No \"Philips hue bridge\" string found in response. This isn't a Hue hub.")
 					isError = True
 					errorsDict['address'] = u"This doesn't appear to be a Philips Hue hub.  Please verify the IP address."
 					errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-				
+
 				else:
 					# This is likely a Hue hub.
 					self.debugLog(u"Verified that this is a Hue hub.")
-					
+
 			except requests.exceptions.Timeout:
 				errorText = u"Connection to %s timed out after %i seconds." % (valuesDict['address'], kTimeout)
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['address'] = u"Unable to reach the hub. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-			
+
 			except requests.exceptions.ConnectionError:
 				errorText = u"Connection to %s failed. There was a connection error." % valuesDict['address']
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['address'] = u"Connection error. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-				
+
 			except Exception, e:
 				errorText = u"Connection error. " + unicode(e)
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['address'] = u"Connection error. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['address'] + u"\n\n"
-				
+
 		# Check for errors and act accordingly.
 		if isError:
 			# There was at least 1 error.
@@ -7826,10 +8202,10 @@ class Plugin(indigo.PluginBase):
 		else:
 			# There weren't any errors, so...
 			# Try pairing with the hub.
-			
+
 			# Configure timeout
 			socket.setdefaulttimeout(kTimeout)
-			
+
 			# Request a username/key.
 			try:
 				indigo.server.log(u"Attempting to pair with the Hue hub at \"%s\"." % (valuesDict['address']))
@@ -7845,13 +8221,13 @@ class Plugin(indigo.PluginBase):
 				if len(responseData) == 1:
 					# Get the first item
 					firstResponseItem = responseData[0]
-					
+
 					# See if we got an error.
 					errorDict = firstResponseItem.get('error', None)
 					if errorDict is not None:
 						# We got an error.
 						errorCode = errorDict.get('type', None)
-						
+
 						if errorCode == 101:
 							# Center link button wasn't pressed on hub yet.
 							errorText = u"Unable to pair with the Hue hub. Press the center button on the Hue hub, then click the \"Pair Now\" button."
@@ -7859,14 +8235,14 @@ class Plugin(indigo.PluginBase):
 							isError = True
 							errorsDict['startPairingButton'] = errorText
 							errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-						
+
 						else:
 							errorText = u"Error #%i from the Hue hub. Description: \"%s\"." % (errorCode, errorDict.get('description', u"(No Description)"))
 							self.errorLog(errorText)
 							isError = True
 							errorsDict['startPairingButton'] = errorText
 							errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-				
+
 					# See if we got a success response.
 					successDict = firstResponseItem.get('success', None)
 					if successDict is not None:
@@ -7881,7 +8257,7 @@ class Plugin(indigo.PluginBase):
 						self.hostId = hueUsername
 						# Make sure the new username is returned to the config dialog.
 						valuesDict['hostId'] = hueUsername
-			
+
 				else:
 					# The Hue hub is acting weird.  There should have been only 1 response.
 					errorText = u"Invalid response from Hue hub. Check the IP address and try again."
@@ -7890,28 +8266,28 @@ class Plugin(indigo.PluginBase):
 					isError = True
 					errorsDict['startPairingButton'] = errorText
 					errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-		
+
 			except requests.exceptions.Timeout:
 				errorText = u"Connection to %s timed out after %i seconds." % (valuesDict['address'], kTimeout)
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['startPairingButton'] = u"Unable to reach the hub. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-			
+
 			except requests.exceptions.ConnectionError:
 				errorText = u"Connection to %s failed. There was a connection error." % valuesDict['address']
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['startPairingButton'] = u"Connection error. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-				
+
 			except Exception, e:
 				errorText = u"Connection error. " + unicode(e)
 				self.errorLog(errorText)
 				isError = True
 				errorsDict['startPairingButton'] = u"Connection error. Please check the IP address and ensure that the Indigo server and Hue hub are connected to the network."
 				errorsDict['showAlertText'] += errorsDict['startPairingButton'] + u"\n\n"
-			
+
 			# Check again for errors.
 			if isError:
 				# There was at least 1 error.
@@ -7920,14 +8296,14 @@ class Plugin(indigo.PluginBase):
 			else:
 				# There still aren't any errors.
 				return valuesDict
-			
-			
 
-			
+
+
+
 	########################################
 	# Action Handling Methods
 	########################################
-	
+
 	# Start/Stop Brightening
 	########################################
 	def startStopBrightening(self, action, device):
@@ -7938,18 +8314,18 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		self.debugLog(u"startStopBrightening: device: " + device.name + u", action:\n" + unicode(action))
 		# Make sure the device is in the deviceList.
 		if device.id in self.deviceList:
-			
+
 			# First, remove from the dimmingList if it's there.
 			if device.id in self.dimmingList:
 				# Log the event to Indigo log.
 				indigo.server.log(u"\"" + device.name + u"\" stop dimming", 'Sent Hue Lights')
 				# Remove from list.
 				self.dimmingList.remove(device.id)
-				
+
 			# Now remove from brighteningList if it's in the list and add if not.
 			if device.id in self.brighteningList:
 				# Log the event to Indigo log.
@@ -7967,9 +8343,9 @@ class Plugin(indigo.PluginBase):
 					indigo.server.log(u"\"" + device.name + u"\" start brightening", 'Sent Hue Lights')
 					# Add to list.
 					self.brighteningList.append(device.id)
-				
+
 		return
-		
+
 	# Start/Stop Dimming
 	########################################
 	def startStopDimming(self, action, device):
@@ -7980,7 +8356,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		self.debugLog(u"startStopDimming: device: " + device.name + ", action:\n" + unicode(action))
 		# Make sure the device is in the deviceList.
 		if device.id in self.deviceList:
@@ -7990,7 +8366,7 @@ class Plugin(indigo.PluginBase):
 				indigo.server.log(u"\"" + device.name + u"\" stop brightening", 'Sent Hue Lights')
 				# Remove from list.
 				self.brighteningList.remove(device.id)
-				
+
 			# Now remove from dimmingList if it's in the list and add if not.
 			if device.id in self.dimmingList:
 				# Log the event to Indigo log.
@@ -8010,12 +8386,12 @@ class Plugin(indigo.PluginBase):
 					self.dimmingList.append(device.id)
 
 		return
-	
+
 	# Set Brightness
 	########################################
 	def setBrightness(self, action, device):
 		self.debugLog(u"setBrightness: device: " + device.name + u", action:\n" + unicode(action))
-		
+
 		brightnessSource = action.props.get('brightnessSource', False)
 		brightness = action.props.get('brightness', False)
 		brightnessVarId = action.props.get('brightnessVariable', False)
@@ -8023,7 +8399,7 @@ class Plugin(indigo.PluginBase):
 		useRateVariable = action.props.get('useRateVariable', False)
 		rate = action.props.get('rate', False)
 		rateVarId = action.props.get('rateVariable', False)
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -8043,7 +8419,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		# Validate the action properties.
 		if not brightnessSource:
 			# The dimmer level source wasn't specified. Try to figure out
@@ -8060,7 +8436,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return None
-		
+
 		if brightnessSource == "custom":
 			if brightness == False and brightness.__class__ != int:
 				errorText = u"No brightness level was specified."
@@ -8084,7 +8460,7 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return None
 			self.debugLog(u"Brightness (source: custom): " + unicode(brightness) + u", class: " + unicode(brightness.__class__))
-		
+
 		elif brightnessSource == "variable":
 			if not brightnessVarId:
 				errorText = u"No variable containing the brightness level was specified."
@@ -8117,7 +8493,7 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return None
 			self.debugLog(u"Brightness (source: variable): " + unicode(brightness) + u", class: " + unicode(brightness.__class__))
-		
+
 		elif brightnessSource == "dimmer":
 			if not brightnessDevId:
 				errorText = u"No dimmer was specified as the brightness level source."
@@ -8169,14 +8545,14 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return None
 			self.debugLog(u"Brightness (source: other dimmer): " + unicode(brightness) + u", class: " + unicode(brightness.__class__))
-		
+
 		else:
 			errorText = u"Unrecognized brightness source \"" + unicode(brightnessSource) + u"\". Valid brightness sources are \"custom\", \"variable\", and \"dimmer\"."
 			self.errorLog(errorText)
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return None
-		
+
 		if not useRateVariable:
 			if not rate and rate.__class__ == bool:
 				errorText = u"No ramp rate was specified."
@@ -8200,7 +8576,7 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return None
 			self.debugLog(u"Rate: " + unicode(rate))
-		
+
 		else:
 			if not rateVarId:
 				errorText = u"No variable containing the ramp rate time was specified."
@@ -8232,16 +8608,16 @@ class Plugin(indigo.PluginBase):
 					# Remember the error.
 					self.lastErrorMessage = errorText
 			self.debugLog(u"Rate: " + unicode(rate))
-		
+
 		# Save the new brightness level into the device properties.
 		if brightness > 0:
 			tempProps = device.pluginProps
 			tempProps['savedBrightness'] = brightness
 			self.updateDeviceProps(device, tempProps)
-		
+
 		# Send the command.
 		self.doBrightness(device, int(round(brightness / 100.0 * 255.0)), rate)
-		
+
 	# Set RGB Level Action
 	########################################
 	def setRGB(self, action, device):
@@ -8273,7 +8649,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		try:
 			red = int(red)
 		except ValueError:
@@ -8282,7 +8658,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		try:
 			green = int(green)
 		except ValueError:
@@ -8291,7 +8667,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		try:
 			blue = int(blue)
 		except ValueError:
@@ -8300,7 +8676,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		if not useRateVariable:
 			# Not using varible, so they've specificed a ramp rate.
 			if rampRate == "" or rampRate == -1:
@@ -8310,7 +8686,7 @@ class Plugin(indigo.PluginBase):
 				#   Catch this and use a default rate of 0.5 seconds if empty.
 				if rampRate == "":
 					rampRate = 0.5
-			
+
 			try:
 				rampRate = float(rampRate)
 				if rampRate < 0 or rampRate > 540:
@@ -8326,7 +8702,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 				return None
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		else:
 			# We're using a ramp rate variable.
 			if not rateVarId:
@@ -8361,23 +8737,23 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		# Determine the brightness based on the highest RGB value (to save in device props).
 		brightness = red
 		if blue > brightness:
 			brightness = blue
 		elif green > brightness:
 			brightness = green
-			
+
 		# Save the new brightness level into the device properties.
 		if brightness > 0:
 			tempProps = device.pluginProps
 			tempProps['savedBrightness'] = brightness
 			self.updateDeviceProps(device, tempProps)
-			
+
 		# Send the command.
 		self.doRGB(device, red, green, blue, rampRate)
-		
+
 	# Set HSB Action
 	########################################
 	def setHSB(self, action, device):
@@ -8412,7 +8788,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		try:
 			hue = float(hue)
 		except ValueError:
@@ -8422,7 +8798,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		try:
 			saturation = int(saturation)
 		except ValueError:
@@ -8432,7 +8808,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		if brightnessSource == "custom":
 			# Using an entered brightness value.
 			if brightness:
@@ -8444,7 +8820,7 @@ class Plugin(indigo.PluginBase):
 					# Remember the error.
 					self.lastErrorMessage = errorText
 					return
-				
+
 				# Make sure the brightness specified in the variable is sane.
 				if brightness < 0 or brightness > 100:
 					errorText = u"Brightness value \"" + unicode(brightness) + u"\" for device \"%s\" is outside the acceptible range of 0 to 100." % (device.name)
@@ -8473,7 +8849,7 @@ class Plugin(indigo.PluginBase):
 					# Remember the error.
 					self.lastErrorMessage = errorText
 					return
-				
+
 				# Make sure the brightness specified in the variable is sane.
 				if brightness < 0 or brightness > 100:
 					errorText = u"Brightness value \"" + unicode(brightness) + u"\" specified in variable \"" + indigo.variables[brightnessVariable].name + u"\" is outside the acceptible range of 0 to 100."
@@ -8504,7 +8880,7 @@ class Plugin(indigo.PluginBase):
 					return
 			else:
 				brightness = device.states['brightnessLevel']
-		
+
 		if not useRateVariable:
 			# Not using varible, so they've specificed a ramp rate.
 			if rampRate == "" or rampRate == -1:
@@ -8514,7 +8890,7 @@ class Plugin(indigo.PluginBase):
 				#   Catch this and use a default rate of 0.5 seconds if empty.
 				if rampRate == "":
 					rampRate = 0.5
-			
+
 			try:
 				rampRate = float(rampRate)
 				if rampRate < 0 or rampRate > 540:
@@ -8530,7 +8906,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 				return None
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		else:
 			# We're using a ramp rate variable.
 			if not rateVarId:
@@ -8570,16 +8946,16 @@ class Plugin(indigo.PluginBase):
 		brightness = int(ceil(brightness / 100.0 * 255.0))
 		saturation = int(ceil(saturation / 100.0 * 255.0))
 		hue = int(round(hue * 182.0))
-		
+
 		# Save the new brightness level into the device properties.
 		if brightness > 0:
 			tempProps = device.pluginProps
 			tempProps['savedBrightness'] = brightness
 			self.updateDeviceProps(device, tempProps)
-			
+
 		# Send the command.
 		self.doHSB(device, hue, saturation, brightness, rampRate)
-		
+
 	# Set xyY Action
 	########################################
 	def setXYY(self, action, device):
@@ -8591,7 +8967,7 @@ class Plugin(indigo.PluginBase):
 		useRateVariable = action.props.get('useRateVariable', False)
 		rampRate = action.props.get('rate', -1)
 		rateVarId = action.props.get('rateVariable', False)
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -8611,7 +8987,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		try:
 			colorX = float(colorX)
 		except ValueError:
@@ -8621,7 +8997,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		try:
 			colorY = float(colorY)
 		except ValueError:
@@ -8631,7 +9007,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		try:
 			brightness = float(brightness)
 		except ValueError:
@@ -8641,7 +9017,7 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		if not useRateVariable:
 			# Not using varible, so they've specificed a ramp rate.
 			if rampRate == "" or rampRate == -1:
@@ -8651,7 +9027,7 @@ class Plugin(indigo.PluginBase):
 				#   Catch this and use a default rate of 0.5 seconds if empty.
 				if rampRate == "":
 					rampRate = 0.5
-			
+
 			try:
 				rampRate = float(rampRate)
 				if rampRate < 0 or rampRate > 540:
@@ -8667,7 +9043,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 				return None
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		else:
 			# We're using a ramp rate variable.
 			if not rateVarId:
@@ -8702,19 +9078,19 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		# Scale the brightness values to match Hue system requirements.
 		brightness = int(ceil(brightness * 255.0))
-		
+
 		# Save the new brightness level into the device properties.
 		if brightness > 0:
 			tempProps = device.pluginProps
 			tempProps['savedBrightness'] = brightness
 			self.updateDeviceProps(device, tempProps)
-			
+
 		# Send the command.
 		self.doXYY(device, colorX, colorY, brightness, rampRate)
-		
+
 	# Set Color Temperature Action
 	########################################
 	def setColorTemperature(self, action, device):
@@ -8722,7 +9098,7 @@ class Plugin(indigo.PluginBase):
 
 		bulbId = device.pluginProps.get('bulbId', None)
 		groupId = device.pluginProps.get('groupId', None)
-		
+
 		# Get the Hue "color recipe" selection. Use "custom" if not specified.
 		#   (The use of the property name "preset" pre-dates the implementation
 		#   of the Save and Recall Preset functions within the plugin.  The
@@ -8740,7 +9116,7 @@ class Plugin(indigo.PluginBase):
 		useRateVariable = action.props.get('useRateVariable', False)
 		rampRate = action.props.get('rate', -1)
 		rateVarId = action.props.get('rateVariable', False)
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -8758,7 +9134,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		if preset == "custom":
 			# Using a custom color recipe (temperature/brightness combination).
 			if temperatureSource == "custom":
@@ -8784,7 +9160,7 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						return
-					
+
 					# Make sure the color temperature specified in the variable is sane.
 					if temperature < 2000 or temperature > 6500:
 						errorText = u"Color temperature value \"" + unicode(temperature) + u"\" found in source variable \"" + indigo.variables[temperatureVariable].name + u"\" for device \"%s\" is outside the acceptible range of 2000 to 6500." % (device.name)
@@ -8794,7 +9170,7 @@ class Plugin(indigo.PluginBase):
 						return
 				else:
 					temperature = device.states['colorTemp']
-					
+
 			if brightnessSource == "custom":
 				# Using an entered brightness value.
 				if brightness:
@@ -8806,7 +9182,7 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						return
-					
+
 					# Make sure the brightness specified in the variable is sane.
 					if brightness < 0 or brightness > 100:
 						errorText = u"Brightness value \"" + unicode(brightness) + u"\" for device \"%s\" is outside the acceptible range of 0 to 100." % (device.name)
@@ -8835,7 +9211,7 @@ class Plugin(indigo.PluginBase):
 						# Remember the error.
 						self.lastErrorMessage = errorText
 						return
-					
+
 					# Make sure the brightness specified in the variable is sane.
 					if brightness < 0 or brightness > 100:
 						errorText = u"Brightness value \"" + unicode(brightness) + u"\" specified in variable \"" + indigo.variables[brightnessVariable].name + u"\" is outside the acceptible range of 0 to 100."
@@ -8869,7 +9245,7 @@ class Plugin(indigo.PluginBase):
 
 			# Scale the brightness value for use with Hue.
 			brightness = int(round(brightness / 100.0 * 255.0))
-		
+
 		if not useRateVariable:
 			# Not using varible, so they've specificed a ramp rate.
 			if rampRate == "" or rampRate == -1:
@@ -8879,7 +9255,7 @@ class Plugin(indigo.PluginBase):
 				#   Catch this and use a default rate of 0.5 seconds if empty.
 				if rampRate == "":
 					rampRate = 0.5
-			
+
 			try:
 				rampRate = float(rampRate)
 				if rampRate < 0 or rampRate > 540:
@@ -8895,7 +9271,7 @@ class Plugin(indigo.PluginBase):
 				self.lastErrorMessage = errorText
 				return None
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		else:
 			# We're using a ramp rate variable.
 			if not rateVarId:
@@ -8930,7 +9306,7 @@ class Plugin(indigo.PluginBase):
 					self.lastErrorMessage = errorText
 					return
 			self.debugLog(u"Rate: " + unicode(rampRate))
-		
+
 		# Configure presets
 		if preset == "concentrate":
 			brightness = 219
@@ -8944,21 +9320,21 @@ class Plugin(indigo.PluginBase):
 		elif preset == "reading":
 			brightness = 240
 			temperature = 2890
-			
+
 		# Save the new brightness level into the device properties.
 		if brightness > 0:
 			tempProps = device.pluginProps
 			tempProps['savedBrightness'] = brightness
 			self.updateDeviceProps(device, tempProps)
-		
+
 		# Send the command.
 		self.doColorTemperature(device, temperature, brightness, rampRate)
-		
+
 	# Set Single Alert Action
 	########################################
 	def alertOnce(self, action, device):
 		self.debugLog(u"alertOnce: device: " + device.name + u", action:\n" + unicode(action))
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -8978,14 +9354,14 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		self.doAlert(device, "select")
-		
+
 	# Set Long Alert Action
 	########################################
 	def longAlert(self, action, device):
 		self.debugLog(u"longAlert: device: " + device.name + u", action:\n" + unicode(action))
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -9005,14 +9381,14 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		self.doAlert(device, "lselect")
-		
+
 	# Stop Alert Action
 	########################################
 	def stopAlert(self, action, device):
 		self.debugLog(u"stopAlert: device: " + device.name + u", action:\n" + unicode(action))
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -9032,14 +9408,14 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		self.doAlert(device, "none")
-	
+
 	# Set Effect Action
 	########################################
 	def effect(self, action, device):
 		self.debugLog(u"effect: device: " + device.name + u", action:\n" + unicode(action))
-		
+
 		# Act based on device type.
 		if device.deviceTypeId == "hueGroup":
 			# Sanity check on group ID
@@ -9059,7 +9435,7 @@ class Plugin(indigo.PluginBase):
 				# Remember the error.
 				self.lastErrorMessage = errorText
 				return
-		
+
 		effect = action.props.get('effect', False)
 		if not effect:
 			errorText = u"No effect specified."
@@ -9069,7 +9445,7 @@ class Plugin(indigo.PluginBase):
 			return False
 		else:
 			self.doEffect(device, effect)
-			
+
 	# Save Preset Action
 	########################################
 	def savePreset(self, action, device):
@@ -9084,7 +9460,7 @@ class Plugin(indigo.PluginBase):
 		except AttributeError:
 			# This is an action, not a menu call.
 			pass
-			
+
 		# Sanity check on bulb ID
 		bulbId = device.pluginProps.get('bulbId', None)
 		if bulbId is None or bulbId == 0:
@@ -9093,13 +9469,13 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		# Get the presetId.
 		if actionType == "menu":
 			presetId = action.get('presetId', False)
 		else:
 			presetId = action.props.get('presetId', False)
-			
+
 		if not presetId:
 			errorText = u"No Preset specified."
 			self.errorLog(errorText)
@@ -9111,7 +9487,7 @@ class Plugin(indigo.PluginBase):
 			presetId = int(presetId)
 			# Subtract 1 because key values are 0-based.
 			presetId -= 1
-			
+
 		# Get the Ramp Rate.
 		if actionType == "menu":
 			rampRate = action.get('rate', "")
@@ -9133,11 +9509,11 @@ class Plugin(indigo.PluginBase):
 					return (False, action, errorsDict)
 		else:
 			rampRate = action.props.get('rate', "")
-			
+
 		# If there was no Ramp Rate specified, use -1.
 		if rampRate == "":
 			rampRate = -1
-			
+
 		# Get the plugin prefs and populate them into a local array.
 		presets = list()
 		for num in range(0,len(self.pluginPrefs['presets'])):
@@ -9149,7 +9525,7 @@ class Plugin(indigo.PluginBase):
 			except IndexError:
 				tempPresetRate = -1
 			presets.append(list((tempPresetName, tempPresetData, tempPresetRate)))
-			
+
 		# Update the new array with the submitted values.
 		if actionType == "menu":
 			presetName = action.get('presetName', False)
@@ -9158,13 +9534,13 @@ class Plugin(indigo.PluginBase):
 				errorsDict['presetName'] = u"The Preset Name is too long. Please choose a name that is 50 or fewer characters long."
 				errorsDict['showAlertText'] += errorsDict['presetName']
 				return (False, action, errorsDict)
-				
+
 		else:
 			presetName = action.props.get('presetName', False)
-			
+
 		if not presetName:
 			presetName = ""
-			
+
 		# If the submitted name is not blank, change the name in the prefs.
 		if presetName != "":
 			# (Index 0 = preset name).
@@ -9172,7 +9548,7 @@ class Plugin(indigo.PluginBase):
 		else:
 			# Submitted presetName is blank. Use the current presetName for logging.
 			presetName = presets[presetId][0]
-			
+
 		# Create the states list dict.
 		for key, value in device.states.iteritems():
 			# (Index 1 = preset data).
@@ -9205,20 +9581,20 @@ class Plugin(indigo.PluginBase):
 			rampRate = -1
 		# (Index 2 = ramp rate).
 		presets[presetId][2] = rampRate
-			
+
 		# Save the device's states to the preset.
 		self.pluginPrefs['presets'] = presets
-		
+
 		# Log the action.
 		if rampRate == -1:
 			indigo.server.log(u"\"" + device.name + u"\" states saved to Preset " + unicode(presetId + 1) + u" (" + presetName + u")")
 		else:
 			indigo.server.log(u"\"" + device.name + u"\" states saved to Preset " + unicode(presetId + 1) + u" (" + presetName + u") with ramp rate " + unicode(rampRate) + u" sec.")
-			
+
 		# Return a tuple if this is a menu item action.
 		if actionType == "menu":
 			return (True, action)
-			
+
 	# Recall Preset Action
 	########################################
 	def recallPreset(self, action, device):
@@ -9233,7 +9609,7 @@ class Plugin(indigo.PluginBase):
 		except AttributeError:
 			# This is an action, not a menu call.
 			pass
-		
+
 		# Sanity check on bulb ID
 		bulbId = device.pluginProps.get('bulbId', None)
 		if bulbId is None or bulbId == 0:
@@ -9242,13 +9618,13 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Get the presetId.
 		if actionType == "menu":
 			presetId = action.get('presetId', False)
 		else:
 			presetId = action.props.get('presetId', False)
-			
+
 		if not presetId:
 			errorText = u"No Preset specified."
 			self.errorLog(errorText)
@@ -9260,7 +9636,7 @@ class Plugin(indigo.PluginBase):
 			presetId = int(presetId)
 			# Subtract 1 because key values are 0-based.
 			presetId -= 1
-			
+
 		# Get the Ramp Rate.
 		if actionType == "menu":
 			rampRate = action.get('rate', "")
@@ -9284,11 +9660,11 @@ class Plugin(indigo.PluginBase):
 					return (False, action, errorsDict)
 		else:
 			rampRate = action.props.get('rate', "")
-			
+
 		# If there is no Ramp Rate specified, use -1.
 		if rampRate == "":
 			rampRate = -1
-			
+
 		# Get the modelId from the device.
 		modelId = device.pluginProps.get('modelId', False)
 		if not modelId:
@@ -9297,14 +9673,14 @@ class Plugin(indigo.PluginBase):
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-			
+
 		elif modelId not in kCompatibleDeviceIDs:
 			errorText = u"The \"" + device.name + u"\" device is not a compatible Hue device. Please select a compatible Hue device."
 			self.errorLog(errorText)
 			# Remember the error.
 			self.lastErrorMessage = errorText
 			return
-		
+
 		# Sanity check on preset ID.
 		try:
 			preset = self.pluginPrefs['presets'][presetId]
@@ -9333,12 +9709,12 @@ class Plugin(indigo.PluginBase):
 			# Key probably doesn't exist. Proceed as if no rate was saved.
 			presetRate = -1
 			pass
-			
+
 		# If there was no Ramp Rate override specified in the recall action,
 		#   use the one saved in the Preset (if any).
 		if rampRate == -1:
 			rampRate = presetRate
-		
+
 		# If the presetData has no data, return an error as this Preset is empty.
 		if len(presetData) < 1:
 			# Return an error if the Preset is empty (since there's nothing to display).
@@ -9368,7 +9744,7 @@ class Plugin(indigo.PluginBase):
 		# Convert the brightnessLevel to 0-255 range for use in the light
 		#   changing method calls.
 		brightness = int(round(brightnessLevel / 100.0 * 255.0))
-		
+
 		# Act based on the capabilities of the target device.
 		if supportsColor:
 			if supportsColorTemperature:
@@ -9376,14 +9752,14 @@ class Plugin(indigo.PluginBase):
 				#   Now determine which mode was saved in the preset and use
 				#   use it with the target device (use "ct" as the default).
 				colorMode = presetData.get('colorMode', "ct")
-				
+
 				if colorMode == "ct":
 					# Get the color temperature state (use 2800 as default).
 					colorTemp = presetData.get('colorTemp', 2800)
-					
+
 					# Make the change to the light.
 					self.doColorTemperature(device, colorTemp, brightness, rampRate)
-					
+
 				elif colorMode == "hs":
 					# Get the hue (use 0 as the default).
 					hue = presetData.get('hue', 0)
@@ -9393,29 +9769,29 @@ class Plugin(indigo.PluginBase):
 					saturation = presetData.get('saturation', 100)
 					# Convert from 0-100 range to 0-255 range.
 					saturation = int(round(saturation / 100.0 * 255.0))
-					
+
 					# Make the light change.
 					self.doHSB(device, hue, saturation, brightness, rampRate)
-					
+
 				elif colorMode == "xy":
 					# Get the x and y values (using 0.35 as default for both).
 					colorX = presetData.get('colorX', 0.35)
 					colorY = presetData.get('colorY', 0.35)
-					
+
 					# Make the light change.
 					self.doXYY(device, colorX, colorY, brightness, rampRate)
-					
+
 			else:
 				# This device supports color, but not color temperature.
 				#   Now determine which mode was saved in the preset and use
 				#   use it with the target device (use "hs" as the default).
 				colorMode = presetData.get('colorMode', "hs")
-				
+
 				if colorMode == "ct":
 					# The target device doesn't suppor color temperature.
 					#   Use an alternate color rendering method such as HSB.
 					colorMode = "xy"
-					
+
 				if colorMode == "hs":
 					# Get the hue (use 0 as the default).
 					hue = presetData.get('hue', 0)
@@ -9425,22 +9801,22 @@ class Plugin(indigo.PluginBase):
 					saturation = presetData.get('saturation', 100)
 					# Convert from 0-100 range to 0-255 range.
 					saturation = int(round(saturation / 100.0 * 255.0))
-					
+
 					# Make the light change.
 					self.doHSB(device, hue, saturation, brightness, rampRate)
-					
+
 				elif colorMode == "xy":
 					# Get the x and y values (using 0.35 as default for both).
 					colorX = presetData.get('colorX', 0.35)
 					colorY = presetData.get('colorY', 0.35)
-					
+
 					# Make the light change.
 					self.doXYY(device, colorX, colorY, brightness, rampRate)
-					
+
 		else:
 			# This device doesn't support color.  Just set the brightness.
 			self.doBrightness(device, brightness, rampRate)
-			
+
 		# Log the action.
 		if rampRate == -1:
 			indigo.server.log(u"\"" + device.name + u"\" states set to Preset " + unicode(presetId + 1) + u" (" + presetName + u")")
@@ -9457,21 +9833,21 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"Starting displayPreset. action values:\n" + unicode(valuesDict) + u"\nType ID:\n" + unicode(typeId) + "\n")
 		errorsDict = indigo.Dict()
 		errorsDict['showAlertText'] = u""
-		
+
 		# Get the presetId.
 		presetId = valuesDict.get('presetId', False)
-			
+
 		if not presetId:
 			errorsDict['presetId'] = u"No Preset is selected."
 			errorsDict['showAlertText'] += errorsDict['presetId']
 			return (False, valuesDict, errorsDict)
-			
+
 		else:
 			# Convert to integer.
 			presetId = int(presetId)
 			# Subtract 1 because key values are 0-based.
 			presetId -= 1
-			
+
 		# Get the data from the preset in the plugin prefs.
 		presetName = self.pluginPrefs['presets'][presetId][0]
 		presetData = self.pluginPrefs['presets'][presetId][1]
@@ -9484,13 +9860,13 @@ class Plugin(indigo.PluginBase):
 			# Key probably doesn't exist. Proceed as if no rate was saved.
 			presetRate = -1
 			pass
-		
+
 		# Return an error if the Preset is empty (since there's nothing to display).
 		if len(presetData) < 1:
 			errorsDict['presetId'] = u"This Preset is empty. Please select a Preset that contains data (the number will have an asterisk (*) next to it)."
 			errorsDict['showAlertText'] += errorsDict['presetId']
 			return (False, valuesDict, errorsDict)
-		
+
 		# Display the Preset data in the Indigo log.
 		logRampRate = unicode(presetRate) + u" sec."
 		if presetRate == -1:
@@ -9514,13 +9890,13 @@ class Plugin(indigo.PluginBase):
 		except AttributeError:
 			# If there is an attribute error, this is a Plugins menu call.
 			actionType = "menu"
-		
+
 		# Get the sceneId.
 		if actionType == "menu":
 			sceneId = action.get('sceneId', False)
 		else:
 			sceneId = action.props.get('sceneId', False)
-			
+
 		if not sceneId:
 			errorText = u"No Scene specified."
 			self.errorLog(errorText)
@@ -9533,7 +9909,7 @@ class Plugin(indigo.PluginBase):
 			groupId = action.get('groupId', False)
 		else:
 			groupId = action.props.get('groupId', False)
-			
+
 		if not groupId:
 			# No group ID specified.  Assume it should be 0 (apply scene to all devices).
 			groupId = 0
@@ -9555,5 +9931,3 @@ class Plugin(indigo.PluginBase):
 			indigo.server.log("Turning on debug logging")
 			self.pluginPrefs['showDebugInfo'] = True
 		self.debug = not self.debug
-
-
